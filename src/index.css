@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+@import "tailwindcss";
+
+.app-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr; /* Sidebar | Content | Right Sidebar */
+  grid-template-rows: 64px 1fr;           /* Topbar height | Content */
+  grid-template-areas:
+    "sidebar topbar rightsidebar"
+    "sidebar content rightsidebar";
+}
+
+/* Assign areas */
+.app-grid > :nth-child(1) { grid-area: sidebar; }
+.app-grid > :nth-child(2) { grid-area: topbar; }
+.app-grid > :nth-child(3) { grid-area: content; }
+.app-grid > :nth-child(4) { grid-area: rightsidebar; }
+
+/* ✅ MOBILE VIEW FIX */
+@media (max-width: 768px) {
+  .app-grid {
+    grid-template-columns: 1fr; /* Only one column */
+    grid-template-rows: 64px 1fr auto; /* Topbar | Content | RightSidebar (optional) */
+
+    grid-template-areas:
+      "topbar"
+      "content"/* Remove if you don't want right sidebar on mobile */
+  }
+
+  /* Hide sidebar completely */
+  .app-grid > :nth-child(1) {
+    display: none;
+  }
+}
+
+.content-area {
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  padding: 20px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadeIn { animation: fadeIn .2s ease-out; }
+
+@keyframes scaleIn {
+  from { transform: scale(.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.animate-scaleIn { animation: scaleIn .25s ease-out; }
+
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+@keyframes blink {
+  0% { background-color: yellow; }
+  50% { background-color: transparent; }
+  100% { background-color: yellow; }
+}
+
+.blink-highlight {
+  animation: blink 0.6s ease-in-out 6; /* blink for 3 sec */
+}
