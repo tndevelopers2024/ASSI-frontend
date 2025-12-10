@@ -186,7 +186,14 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
 
                             {/* Line 1 → Name • 1 hr ago • Category */}
                             <div className="flex items-center gap-2 text-sm">
-                                <span className="font-semibold text-[15px] max-md:text-[12px]">{data.user.fullname}</span>
+
+                                <span
+                                    className="font-semibold text-[15px] max-md:text-[12px] cursor-pointer hover:underline"
+                                    onClick={() => window.location.href = `/profile/${data.user?._id}`}
+                                >
+                                    {data.user.fullname}
+                                </span>
+
                                 <span className="text-gray-500">•</span>
                                 <span className="text-gray-500">{timeAgo(data.createdAt)}</span>
                                 <span className="text-gray-500">•</span>
