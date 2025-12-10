@@ -7,6 +7,8 @@ import { MoreVertical, Trash2, Edit, Bookmark } from "lucide-react";
 import API from "../api/api";
 import { getComments, deletePost, toggleSavePost } from "../api/postApi";
 import { useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
+
 
 export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId }) {
     if (!data) return null;
@@ -105,18 +107,27 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
         setShowMenu(false);
     };
 
+
     const confirmDelete = async () => {
         try {
             await deletePost(data._id);
+
+            toast.success("Post deleted successfully!", {
+                position: "top-center",
+            });
+
             if (onDelete) onDelete(data._id);
-            window.location.reload(); // Reload to update the list
+
+            window.location.reload();
         } catch (error) {
-            console.error("Error deleting post:", error);
-            alert("Failed to delete post");
+            toast.error("Failed to delete post!", {
+                position: "top-center",
+            });
         } finally {
             setDeleteModalOpen(false);
         }
     };
+
 
     const handleEdit = () => {
         if (onUpdate) onUpdate(data);
@@ -150,7 +161,7 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
 
 
     return (
-        <>  
+        <>
             <div className="bg-white rounded-xl shadow-md p-4 mb-6 border border-gray-200">
 
                 {/* HEADER */}
@@ -336,10 +347,11 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                 data={{
                     _id: data._id,
                     user: data.user,  // ← FULL USER OBJECT WITH profile_url
-                    time: new Date(data.createdAt).toLocaleString(),
+                    createdAt: data.createdAt,      // ✅ FIXED
                     description: data.content,
                     images: postImages,
                     comments: comments,
+                    title: data.title,
                 }}
                 replyingTo={replyingToComment}
                 onCommentAdded={async () => {

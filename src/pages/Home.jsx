@@ -3,6 +3,8 @@ import { getAllPosts } from "../api/postApi";
 import CaseCard from "../components/CaseCard";
 import UploadCaseModal from "../components/UploadCaseModal";
 import { SlidersHorizontal, X as XIcon } from "lucide-react"; // Filter icon
+import { io } from "socket.io-client";
+const socket = io(import.meta.env.VITE_API_URL);
 
 import { useSearch } from "../context/SearchContext";
 
@@ -47,6 +49,21 @@ export default function Home() {
     }
 };
 
+useEffect(() => {
+  socket.on("post:new", post => {
+    setPosts(prev => [post, ...prev]); // Add new post to top
+  });
+
+  socket.on("post:updated", updated => {
+    setPosts(prev => prev.map(p => p._id === updated._id ? updated : p));
+  });
+
+  return () => {
+    socket.off("post:new");
+    socket.off("post:updated");
+  };
+}, []);
+
 
     const filterPosts = () => {
         let result = posts;
@@ -86,7 +103,7 @@ export default function Home() {
             <div className="">
 
                 {/* 🔥 Top Header Row */}
-                <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center justify-between mb-5 max-md:px-4">
                     <div className="rounded-full bg-white px-4 py-2">
                         <h2 className="text-sm font-semibold">Recent Cases</h2>
                     </div>

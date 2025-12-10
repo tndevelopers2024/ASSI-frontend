@@ -5,8 +5,9 @@ import { getSavedPosts, getUserComments } from "../api/postApi";
 import CaseCard from "../components/CaseCard";
 import UploadCaseModal from "../components/UploadCaseModal";
 import { Plus } from "lucide-react";
+import EditProfileImageModal from "../components/EditProfileImageModal";
 
-export default function Profile() {
+export default function Profile({ onEditImage }) {
     const [activeTab, setActiveTab] = useState("post");
     const [user, setUser] = useState(null);
     const [posts, setPosts] = useState([]);
@@ -20,6 +21,8 @@ export default function Profile() {
 
     const [userComments, setUserComments] = useState([]);
     const [loadingComments, setLoadingComments] = useState(false);
+    const [editImageOpen, setEditImageOpen] = useState(false);
+
 
     useEffect(() => {
         loadUserData();
@@ -27,6 +30,22 @@ export default function Profile() {
         loadSavedPosts();
         loadUserComments();
     }, []);
+    // Listen for user update from anywhere (Topbar, modal, etc.)
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const stored = localStorage.getItem("user");
+            if (stored) {
+                setUser(JSON.parse(stored));
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+
+        return () => {
+            window.removeEventListener("storage", handleStorageChange);
+        };
+    }, []);
+
 
     const loadUserComments = async () => {
         try {
@@ -87,6 +106,47 @@ export default function Profile() {
     const userLetter = user?.fullname?.charAt(0)?.toUpperCase() || "D";
     const BASE_URL = import.meta.env.VITE_API_URL;
 
+    const timeAgo = (date) => {
+        const now = new Date();
+        const diff = now - new Date(date);
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        const months = Math.floor(days / 30);
+        const years = Math.floor(days / 365);
+
+        if (years > 0) return `${years} year${years === 1 ? "" : "s"} ago`;
+        if (months > 0) return `${months} month${months === 1 ? "" : "s"} ago`;
+        if (days > 0) return `${days} day${days === 1 ? "" : "s"} ago`;
+        if (hours > 0) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+        if (minutes > 0) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+        return `${seconds} second${seconds === 1 ? "" : "s"} ago`;
+    };
+
+    const handleImageUpload = async (file) => {
+        try {
+            const formData = new FormData();
+            formData.append("profile", file);
+
+            const res = await API.put("/users/update-profile-image", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            // update user in localStorage
+            localStorage.setItem("user", JSON.stringify(res.data.user));
+
+            // update UI
+            setUser(res.data.user);
+
+            // close modal
+            setEditImageOpen(false);
+
+        } catch (err) {
+            console.error("Error uploading profile:", err);
+        }
+    };
+
     return (
         <div className="bg-gray-100 min-h-screen">
             <div className="">
@@ -122,11 +182,12 @@ export default function Profile() {
                             Add Your Case <Plus size={16} />
                         </button>
                         <button
-                            onClick={() => navigate("/settings")}
+                            onClick={() => setEditImageOpen(true)}
                             className="px-4 py-2 border border-gray-300 rounded-full cursor-pointer hover:bg-gray-50 text-sm font-medium"
                         >
                             Edit Profile
                         </button>
+
                     </div>
 
                     {/* Tabs */}
@@ -173,12 +234,6 @@ export default function Profile() {
                             <div className="bg-white p-10 rounded-xl shadow text-center text-gray-600">
                                 <p className="text-lg font-semibold mb-2">No posts yet</p>
                                 <p className="text-sm">Share your first case to get started!</p>
-                                <button
-                                    onClick={() => setOpenUploadModal(true)}
-                                    className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 cursor-pointer flex items-center gap-2"
-                                >
-                                    Add Your Case <Plus size={16} />
-                                </button>
                             </div>
                         ) : (
                             posts.map((post) => (
@@ -209,13 +264,24 @@ export default function Profile() {
                             </div>
                         ) : (
                             userComments.map((comment) => (
-                                <div key={comment._id} className="bg-white p-4 rounded-xl shadow border border-gray-100">
-                                    <p className="text-gray-800 text-sm mb-2">{comment.text}</p>
+                                <div
+                                    key={comment._id}
+                                    className="bg-white p-4 rounded-xl shadow border border-gray-100 cursor-pointer hover:bg-gray-50 transition"
+                                    onClick={() => navigate(`/post/${comment.post?._id}?comment=${comment._id}`)}
+                                >
+                                    {/* Comment Text */}
+                                    <p className="text-gray-800 text-sm mb-2">{comment.content}</p>
+
+                                    {/* Footer */}
                                     <div className="flex justify-between items-center text-xs text-gray-500">
-                                        <span>On post: <span className="font-medium text-blue-600">{comment.post?.title || "Unknown Post"}</span></span>
-                                        <span>{new Date(comment.createdAt).toLocaleString()}</span>
+                                        <span>
+                                            On post:{" "}
+                                            <span className="font-medium text-blue-600">{comment.post?.title || "Unknown Post"}</span>
+                                        </span>
+                                        <span>{timeAgo(comment.createdAt)}</span>
                                     </div>
                                 </div>
+
                             ))
                         )}
                     </div>
@@ -256,9 +322,17 @@ export default function Profile() {
                     setOpenUploadModal(false);
                     setEditingPost(null);
                     loadUserPosts();
+                    loadUserData(); // 👈 refresh after closing modal
                 }}
                 initialData={editingPost}
             />
+
+            <EditProfileImageModal
+                open={editImageOpen}
+                onClose={() => setEditImageOpen(false)}
+                onUpload={handleImageUpload}
+            />
+
         </div>
     );
 }

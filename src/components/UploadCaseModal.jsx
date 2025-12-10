@@ -1,14 +1,27 @@
-import { X, UploadCloud } from "lucide-react";
+import { X, UploadCloud, ChevronDown } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { createPost, updatePost } from "../api/postApi";
+import toast from "react-hot-toast";
+import { io } from "socket.io-client";
+const socket = io(import.meta.env.VITE_API_URL);
+
+
 
 export default function UploadCaseModal({ open, onClose, initialData = null }) {
   const [title, setTitle] = useState("");
   const [caseText, setCaseText] = useState("");
   const [category, setCategory] = useState("");
-  const [newImages, setNewImages] = useState([]); 
-  const [existingImages, setExistingImages] = useState([]); 
+  const [newImages, setNewImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [dragIndex, setDragIndex] = useState(null);
+  const [isPosting, setIsPosting] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [errors, setErrors] = useState({
+    title: "",
+    caseText: "",
+    category: "",
+  });
+
 
   const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -64,26 +77,50 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
 
   // SUBMIT
   const handleSubmit = async () => {
-    try {
-      const payload = {
-        title,
-        content: caseText,
-        category,
-      };
+  if (isPosting) return;
 
-      if (initialData) {
-        await updatePost(initialData._id, payload, newImages, existingImages);
-      } else {
-        await createPost(payload, newImages);
-      }
-
-      onClose();
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save post");
-    }
+  const newErrors = {
+    title: title ? "" : "Title is required",
+    caseText: caseText ? "" : "Case description is required",
+    category: category ? "" : "Tag is required",
   };
+
+  setErrors(newErrors);
+  if (Object.values(newErrors).some((msg) => msg !== "")) return;
+
+  setIsPosting(true);
+
+  try {
+    const payload = {
+      title,
+      content: caseText,
+      category,
+    };
+
+    let response;
+
+    if (initialData) {
+      response = await updatePost(initialData._id, payload, newImages, existingImages);
+      toast.success("Post updated!");
+      socket.emit("post:updated", response);
+    } else {
+      response = await createPost(payload, newImages);
+      toast.success("Post created!");
+      socket.emit("post:new", response);
+    }
+
+    onClose();
+    setIsPosting(false);
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to upload post");
+    setIsPosting(false);
+  }
+};
+
+
+
 
   // DRAG EVENTS
   const handleDragStart = (index) => {
@@ -133,38 +170,101 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
           <p className="text-sm font-semibold text-[#1A3A7D] mb-2">Text</p>
 
           <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Title*"
-              className="w-full border border-gray-300 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-300"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+            <div>
+              <input
+                type="text"
+                placeholder="Title*"
+                className={`w-full border p-3 rounded-xl outline-none focus:ring-2 
+      ${errors.title ? "border-red-500 ring-red-200" : "border-gray-300 focus:ring-blue-300"}
+    `}
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setErrors((prev) => ({ ...prev, title: "" }));
+                }}
+              />
+              {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+            </div>
 
-            <textarea
-              rows={4}
-              placeholder="Case*"
-              className="w-full border border-gray-300 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-300 resize-none"
-              value={caseText}
-              onChange={(e) => setCaseText(e.target.value)}
-            />
+
+            <div>
+              <textarea
+                rows={4}
+                placeholder="Case*"
+                className={`w-full border p-3 rounded-xl outline-none resize-none focus:ring-2 
+      ${errors.caseText ? "border-red-500 ring-red-200" : "border-gray-300 focus:ring-blue-300"}
+    `}
+                value={caseText}
+                onChange={(e) => {
+                  setCaseText(e.target.value);
+                  setErrors((prev) => ({ ...prev, caseText: "" }));
+                }}
+              />
+              {errors.caseText && <p className="text-red-500 text-sm mt-1">{errors.caseText}</p>}
+            </div>
+
 
             {/* DROPDOWN */}
-            <select
-              className="w-full border border-gray-300 p-3 rounded-xl bg-white text-gray-600 outline-none focus:ring-2 focus:ring-blue-300"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="">Tag</option>
-              <option value="General">General</option>
-              <option value="Education">Education</option>
-              <option value="Coding">Coding</option>
-              <option value="Design">Design</option>
-              <option value="News">News</option>
-              <option value="Technology">Technology</option>
-              <option value="Entertainment">Entertainment</option>
-              <option value="Other">Other</option>
-            </select>
+            <div className="relative">
+              {/* Selected Box */}
+              <div
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className={`w-full border p-3 rounded-xl bg-white cursor-pointer flex justify-between items-center
+      ${errors.category ? "border-red-500" : "border-gray-300"}
+    `}
+              >
+                <span className={`${category ? "text-gray-700" : "text-gray-400"}`}>
+                  {category || "Select Tag *"}
+                </span>
+                <span className="text-gray-500"><ChevronDown size={22} /></span>
+              </div>
+
+              {/* Error message */}
+              {errors.category && (
+                <p className="text-red-500 text-sm mt-1">{errors.category}</p>
+              )}
+
+              {/* Dropdown List */}
+              {dropdownOpen && (
+                <div
+                  className="absolute w-full mt-2 bg-white shadow-xl rounded-xl border border-gray-200 py-2 z-20 animate-fadeIn"
+                >
+                  <p className="px-4 py-2 text-sm font-semibold text-gray-700">
+                    Tags
+                  </p>
+
+                  {[
+                    "General",
+                    "Education",
+                    "Coding",
+                    "Design",
+                    "News",
+                    "Technology",
+                    "Entertainment",
+                    "Other",
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      onClick={() => {
+                        setCategory(item);
+                        setErrors((prev) => ({ ...prev, category: "" }));
+                        setDropdownOpen(false);
+                      }}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-gray-700"
+                    >
+                      {item}
+                    </div>
+                  ))}
+
+                  {/* Disabled item style */}
+                  <div className="px-4 py-2 text-gray-400 cursor-not-allowed">
+                    More coming soon
+                  </div>
+                </div>
+              )}
+            </div>
+
+
           </div>
 
           {/* IMAGE UPLOAD */}
@@ -230,10 +330,12 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
 
             <button
               onClick={handleSubmit}
-              className="px-6 py-2 rounded-full bg-[#0057FF] text-white hover:bg-blue-700 transition cursor-pointer"
+              disabled={isPosting}
+              className={`px-6 py-2 rounded-full text-white transition cursor-pointer ${isPosting ? "bg-blue-400 cursor-not-allowed" : "bg-[#0057FF] hover:bg-blue-700"}`}
             >
-              {initialData ? "Update Post" : "Post"}
+              {isPosting ? "Posting..." : initialData ? "Update Post" : "Post"}
             </button>
+
           </div>
         </div>
       </div>

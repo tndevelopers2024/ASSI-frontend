@@ -17,15 +17,33 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const BASE_URL = import.meta.env.VITE_API_URL;
 
-    // ✔ HOOK MUST BE HERE (before any return)
+    // ⭐ Ensure all comments are visible so highlighted comment exists in DOM
     useEffect(() => {
-        if (highlightCommentId) {
-            const el = document.getElementById(highlightCommentId);
+        if (!highlightCommentId || comments.length === 0) return;
+
+        const parentComments = comments.filter(c => !c.parentComment);
+        setVisibleCount(parentComments.length);   // show ALL parent comments
+    }, [highlightCommentId, comments]);
+
+    // ⭐ Scroll to highlighted comment after all comments are visible
+    useEffect(() => {
+        if (!highlightCommentId || comments.length === 0) return;
+
+        const el = document.getElementById(highlightCommentId);
+
+        // Delay to ensure the DOM has rendered fully
+        setTimeout(() => {
             if (el) {
                 el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+                // Blink highlight (2 times)
+                el.classList.add("highlight-blink");
+                setTimeout(() => el.classList.remove("highlight-blink"), 1500);
             }
-        }
-    }, [highlightCommentId, comments]);
+        }, 300);
+    }, [highlightCommentId, comments, visibleCount]);
+
+
 
     // NOW it's safe to return early
     if (!comments || comments.length === 0) {
@@ -135,18 +153,19 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
 
 
     const confirmDelete = async () => {
-        if (!commentToDelete) return;
-        try {
-            await deleteComment(commentToDelete);
+    if (!commentToDelete) return;
+
+    // RETURN so ConfirmationModal can show toast correctly
+    return deleteComment(commentToDelete)
+        .then(() => {
             if (onCommentAdded) onCommentAdded(); // Refresh comments
-        } catch (error) {
-            console.error("Error deleting comment:", error);
-            alert("Failed to delete comment");
-        } finally {
+        })
+        .finally(() => {
             setDeleteModalOpen(false);
             setCommentToDelete(null);
-        }
-    };
+        });
+};
+
 
     const renderComment = (comment, isReply = false, depth = 0) => {
         const userName =
@@ -170,14 +189,19 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
         const canDelete = isOwner || isAdmin;
 
         return (
-            <div key={comment._id} className={`relative ${isReply ? "ml-12 mt-4" : "mb-4"}`}>
+            <div
+                key={comment._id}
+                                  // ⭐ Required for scroll + highlight
+                className={`relative ${isReply ? "ml-12 mt-4" : "mb-4"}`}
+            >
+
 
                 {/* Connector Line for Replies */}
                 {isReply && (
                     <div className="absolute -left-8 -top-10 bottom-1/2 w-8 border-l-2 border-b-2 border-dashed border-gray-300 rounded-bl-2xl h-[calc(50%+20px)]"></div>
                 )}
 
-                <div className="bg-gray-100 rounded-2xl p-4 flex gap-3 items-start relative z-10 group">
+                <div id={comment._id} className="bg-gray-100 rounded-2xl p-4 flex gap-3 items-start relative z-10 group">
                     {/* Avatar */}
                     <div
                         className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0 overflow-hidden cursor-pointer"

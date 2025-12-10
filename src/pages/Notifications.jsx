@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import API from "../api/api";
-import { MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Notifications() {
@@ -16,7 +15,14 @@ export default function Notifications() {
     const loadNotifications = async () => {
         try {
             const res = await API.get("/notifications");
-            setNotifications(res.data);
+
+            // ⛔ FILTER OUT deleted posts/comments
+            const filtered = res.data.filter(
+                (n) => n.post?._id && n.comment?._id
+            );
+
+            setNotifications(filtered);
+
             await API.put("/notifications/mark-read");
         } catch (err) {
             console.error("Error loading notifications:", err);
@@ -40,7 +46,6 @@ export default function Notifications() {
                                 key={i}
                                 className="flex items-start gap-4 p-4 rounded-xl border border-gray-200"
                             >
-                                {/* Circle skeleton */}
                                 <div className="w-10 h-10 rounded-full bg-gray-300"></div>
 
                                 <div className="flex-1 space-y-2">
@@ -57,26 +62,41 @@ export default function Notifications() {
 
                 {/* 🔹 Empty State */}
                 {!loading && notifications.length === 0 && (
-                    <p className="text-gray-500 text-center py-8">No notifications yet.</p>
+                    <p className="text-gray-500 text-center py-8">
+                        No notifications yet.
+                    </p>
                 )}
 
-                {/* 🔹 Real Notifications */}
+                {/* 🔹 Notifications List */}
                 {!loading && (
                     <div className="space-y-4">
                         {notifications.map((n) => (
                             <div
                                 key={n._id}
-                                  onClick={() => navigate(`/post/${n.post?._id}?comment=${n.comment}`)}
-                                className="flex items-start gap-4 p-4 rounded-xl border border-gray-200 hover:shadow-md hover:bg-gray-50 transition-all cursor-pointer"
+                                onClick={async () => {
+                                    // Mark only this notification as read
+                                    await API.put(`/notifications/mark-one-read/${n._id}`);
+
+                                    navigate(`/post/${n.post._id}?comment=${n.comment._id}`);
+                                }}
+                                className={`flex items-start gap-4 p-4 rounded-xl border 
+                                ${n.isRead ? "bg-white" : "bg-blue-50 border-blue-200"} 
+                                hover:shadow-md hover:bg-gray-50 transition-all cursor-pointer`}
                             >
                                 {/* Profile Image */}
-                                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shadow">
-                                    <img
-                                        src={`${import.meta.env.VITE_API_URL}/${n.fromUser?.profile_url}`}
-                                        alt="User"
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => (e.target.src = "/images/default-avatar.png")}
-                                    />
+                                <div className="w-10 h-10 rounded-full bg-gray-200 shadow flex items-center justify-center overflow-hidden">
+                                    {n.fromUser?.profile_url ? (
+                                        <img
+                                            src={`${import.meta.env.VITE_API_URL}/${n.fromUser.profile_url}`}
+                                            alt="User"
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => (e.target.style.display = "none")}
+                                        />
+                                    ) : (
+                                        <span className="text-gray-700 font-semibold text-lg">
+                                            {n.fromUser?.fullname?.charAt(0).toUpperCase()}
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Notification Content */}
@@ -84,16 +104,13 @@ export default function Notifications() {
                                     <p className="text-sm font-semibold text-gray-900">
                                         {n.fromUser?.fullname}
                                     </p>
-                                    <p className="text-gray-600 text-sm mt-1">{n.message}</p>
+                                    <p className="text-gray-600 text-sm mt-1">
+                                        {n.message}
+                                    </p>
                                     <p className="text-xs text-gray-400 mt-1">
                                         {new Date(n.createdAt).toLocaleString()}
                                     </p>
                                 </div>
-
-                                {/* Options Icon */}
-                                <button className="p-1 hover:bg-gray-200 rounded-full">
-                                    <MoreHorizontal size={20} className="text-gray-500" />
-                                </button>
                             </div>
                         ))}
                     </div>

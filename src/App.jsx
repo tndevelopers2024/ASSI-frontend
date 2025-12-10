@@ -5,13 +5,16 @@ import RightSidebar from "./components/RightSidebar";
 import BottomNav from "./components/BottomNav";   // ⬅️ Add this
 import { SearchProvider } from "./context/SearchContext";
 import ScrollToTop from "./components/ScrollToTop";
+import { Toaster } from "react-hot-toast";
+
 
 export default function App() {
   return (
     <SearchProvider>
+        <Toaster />
+
       <div className="app-grid h-screen w-full overflow-hidden">
         <ScrollToTop />
-
         {/* LEFT SIDEBAR */}
         <Sidebar />
 
@@ -19,7 +22,7 @@ export default function App() {
         <Topbar />
 
         {/* MAIN CONTENT */}
-        <main className="grid grid-cols-[2fr_1fr] max-md:grid-cols-[1fr] content-area overflow-y-auto bg-[#F5F7FA] p-6 max-md:p-2 max-md:overflow-x-hidden">
+        <main className="grid grid-cols-[2fr_1fr] max-md:grid-cols-[1fr] content-area overflow-y-auto bg-[#F5F7FA] p-6 max-md:py-2 max-md:overflow-x-hidden">
           <div>
             <Outlet />
           </div>

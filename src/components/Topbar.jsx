@@ -4,6 +4,7 @@ import API from "../api/api";  // ✅ MISSING IMPORT (required)
 import UploadCaseModal from "../components/UploadCaseModal";
 import ProfileDropdown from "../components/ProfileDropdown";
 import EditProfileImageModal from "../components/EditProfileImageModal";
+import { io } from "socket.io-client";
 
 import { useSearch } from "../context/SearchContext";
 
@@ -14,20 +15,48 @@ export default function Topbar() {
   const [user, setUser] = useState(null);
   const { searchQuery, setSearchQuery } = useSearch();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showTooltip, setShowTooltip] = useState(false);
 
-  const loadUnreadCount = async () => {
-    try {
-      const res = await API.get("/notifications/unread-count");
-      setUnreadCount(res.data.count);
-    } catch (err) {
-      console.error("Unread count error:", err);
-    }
-  };
+  // Show tooltip for 2 seconds when unreadCount increases
   useEffect(() => {
-    loadUnreadCount();
-    const interval = setInterval(loadUnreadCount, 10000);
-    return () => clearInterval(interval);
-  }, []);
+    if (unreadCount > 0) {
+      setShowTooltip(true);
+
+      const timer = setTimeout(() => {
+        setShowTooltip(false);
+      }, 4000); // 2 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [unreadCount]);
+
+
+  useEffect(() => {
+    if (!user?._id) return;
+
+    // Connect to socket server
+    const socket = io(import.meta.env.VITE_API_URL, {
+      query: { userId: user._id },
+      transports: ["websocket"],
+    });
+
+    console.log("Socket connected:", socket.id);
+
+    // Receive unread count updates instantly
+    socket.on("notification:new", (data) => {
+      setUnreadCount(data.count);
+    });
+
+    // Optionally update when notifications marked as read
+    socket.on("notification:read", (data) => {
+      setUnreadCount(data.count);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
+
 
 
   const dropdownRef = useRef(null);
@@ -103,17 +132,34 @@ export default function Topbar() {
         </button>
 
         <div className="relative cursor-pointer" onClick={() => window.location.href = "/notifications"}>
+
+          {/* ⭐ Tooltip (shows for 2 seconds) */}
+          {showTooltip && (
+            <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs py-1.5 px-3 whitespace-nowrap rounded-full shadow-lg opacity-90 animate-fadeInOut">
+
+              {/* 🔺 Rounded Triangle Pointer */}
+              <div className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-0 h-0 
+      border-l-8 border-l-transparent 
+      border-r-8 border-r-transparent 
+      border-b-8 border-b-red-600 rounded-sm">
+              </div>
+
+              New Notifications
+            </div>
+          )}
+
+
           <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
             <Bell size={18} />
           </div>
 
-          {/* 🔥 Notification Badge */}
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow">
               {unreadCount}
             </span>
           )}
         </div>
+
 
 
         <div className="relative" ref={dropdownRef}>

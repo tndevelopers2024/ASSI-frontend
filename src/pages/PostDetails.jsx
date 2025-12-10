@@ -8,7 +8,7 @@ export default function PostDetails() {
   const location = useLocation();
   const [post, setPost] = useState(null);
 
-  // Get commentId from URL
+  // Extract commentId from URL
   const queryParams = new URLSearchParams(location.search);
   const highlightCommentId = queryParams.get("comment");
 

@@ -56,31 +56,30 @@ export const deletePost = async (id) => {
 };
 
 // Update a post
-// Update a post
 export const updatePost = async (id, postData, images, existingImages) => {
-    const formData = new FormData();
-    formData.append("title", postData.title);
-    formData.append("content", postData.content);
-    formData.append("category", postData.category);
+  const formData = new FormData();
 
-    if (images && images.length > 0) {
-        images.forEach((img) => {
-            formData.append("images", img);
-        });
-    }
+  formData.append("title", postData.title);
+  formData.append("content", postData.content);
+  formData.append("category", postData.category);
 
-    if (existingImages && existingImages.length > 0) {
-        existingImages.forEach((img) => {
-            formData.append("existingImages", img);
-        });
-    }
-
-    const res = await API.put(`/posts/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+  // New images
+  if (images && images.length > 0) {
+    images.forEach((img) => {
+      formData.append("images", img);
     });
+  }
 
-    return res.data;
+  // Important: send existing images as ONE JSON string
+  formData.append("existingImages", JSON.stringify(existingImages || []));
+
+  const res = await API.put(`/posts/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+  return res.data;
 };
+
 
 // Toggle save post
 export const toggleSavePost = async (id) => {

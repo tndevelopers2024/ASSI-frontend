@@ -24,7 +24,7 @@ export default function ImageGrid({ images = [], postContent = "" }) {
                     src={images[0]}
                     alt="single"
                     onClick={() => handleClick(0)}
-                    className="w-[300px] h-auto rounded-xl mt-3 cursor-pointer object-cover"
+                    className="w-[400px] h-auto rounded-xl mt-3 cursor-pointer object-cover"
                 />
                 </div>
 
@@ -83,7 +83,7 @@ export default function ImageGrid({ images = [], postContent = "" }) {
                         src={first}
                         alt="first"
                         onClick={() => handleClick(0)}
-                        className="w-full h-full object-cover rounded-xl cursor-pointer"
+                        className="w-full h-[410px] object-cover rounded-xl cursor-pointer"
                     />
                 </div>
 

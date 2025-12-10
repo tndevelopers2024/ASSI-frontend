@@ -15,7 +15,10 @@ export default function CommentModal({
     const [comment, setComment] = useState("");
     const [expanded, setExpanded] = useState(false);
     const [imgError, setImgError] = useState(false);
+    const [isPosting, setIsPosting] = useState(false);
     const firstLetter = data.user?.fullname?.[0]?.toUpperCase() || "?";
+    const [errorMessage, setErrorMessage] = useState("");
+
 
     const profileUrl = data.user?.profile_url?.startsWith("http")
         ? data.user.profile_url
@@ -40,7 +43,13 @@ export default function CommentModal({
     };
 
     const handlePostComment = async () => {
-        if (!comment.trim() && uploads.length === 0) return;
+        if (!comment.trim() && uploads.length === 0) {
+            setErrorMessage("Please write a comment or upload a file.");
+            return;
+        }
+
+        setIsPosting(true);
+        setErrorMessage("");
 
         const formData = new FormData();
         formData.append("content", comment);
@@ -54,23 +63,34 @@ export default function CommentModal({
 
             setComment("");
             setUploads([]);
+            setErrorMessage("");
 
             if (onCommentAdded) await onCommentAdded();
             onClose();
         } catch (err) {
             console.error("Error posting comment:", err);
-            alert("Failed to post comment");
+            setErrorMessage("Please Fill the Comment Box");
+        } finally {
+            setIsPosting(false);
         }
     };
 
+
+
     const shortText = data.description?.slice(0, 180);
 
+
     const timeAgo = (timestamp) => {
-        const now = new Date();
+        if (!timestamp) return "Unknown date";
+
         const past = new Date(timestamp);
+        if (isNaN(past.getTime())) return "Unknown date";
+
+        const now = new Date();
         const seconds = Math.floor((now - past) / 1000);
 
         if (seconds < 60) return "Just now";
+
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
 
@@ -89,6 +109,7 @@ export default function CommentModal({
         const years = Math.floor(days / 365);
         return `${years} year${years > 1 ? "s" : ""} ago`;
     };
+
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 h-full">
             <div className="bg-white w-[700px] rounded-xl shadow-[0_4px_14px_rgba(0,0,0,0.15)] p-6 relative overflow-y-auto max-h-[90vh] hide-scrollbar">
@@ -214,6 +235,10 @@ export default function CommentModal({
                         className="w-full p-3 rounded-lg outline-none resize-none"
                     ></textarea>
 
+                    {errorMessage && (
+                        <p className="text-red-500 mt-2 text-sm">{errorMessage}</p>
+                    )}
+
                     <div className="flex items-center justify-between mt-3">
 
                         {/* Upload Button */}
@@ -232,10 +257,13 @@ export default function CommentModal({
                         {/* Post Button */}
                         <button
                             onClick={handlePostComment}
-                            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-full cursor-pointer hover:bg-blue-700"
+                            disabled={isPosting}
+                            className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-full cursor-pointer ${isPosting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
                         >
-                            Post Comment <SendHorizontal />
+                            {isPosting ? "Posting..." : "Post Comment"}
+                            <SendHorizontal />
                         </button>
+
 
                     </div>
                 </div>

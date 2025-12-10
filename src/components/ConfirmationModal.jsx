@@ -1,4 +1,5 @@
 import { AlertTriangle, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function ConfirmationModal({
     isOpen,
@@ -12,6 +13,23 @@ export default function ConfirmationModal({
 }) {
     if (!isOpen) return null;
 
+    const handleConfirm = async () => {
+        try {
+            const result = await onConfirm();   // get response from caller
+
+            toast.success("Deleted successfully!", {
+                duration: 2500,
+            });
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to delete!", {
+                duration: 2500,
+            });
+        }
+
+        onClose();
+    };
+
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] animate-fadeIn">
             <div className="bg-white rounded-2xl shadow-2xl w-[400px] p-6 relative animate-scaleIn border border-gray-100">
@@ -24,9 +42,12 @@ export default function ConfirmationModal({
                     <X size={20} />
                 </button>
 
-                {/* Icon & Title */}
+                {/* Icon + Title */}
                 <div className="flex flex-col items-center text-center">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${isDanger ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}>
+                    <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${isDanger ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"
+                            }`}
+                    >
                         <AlertTriangle size={24} />
                     </div>
 
@@ -38,23 +59,52 @@ export default function ConfirmationModal({
                 <div className="flex gap-3 mt-8">
                     <button
                         onClick={onClose}
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition cursor-pointer"
+                        className="flex-1 px-4 py-2.5 rounded-full border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition cursor-pointer"
                     >
                         {cancelText}
                     </button>
 
                     <button
-                        onClick={() => {
-                            onConfirm();
+                        onClick={async () => {
+                            try {
+                                await onConfirm();
+
+                                // 🔥 SUCCESS TOAST HERE
+                                toast.success("Deleted successfully!", {
+                                    position: "top-center",
+                                    style: {
+                                        background: "#111",
+                                        color: "#fff",
+                                        borderRadius: "10px",
+                                        padding: "10px 16px",
+                                        fontWeight: "600",
+                                    },
+                                });
+
+                            } catch (err) {
+                                // ❌ ERROR TOAST HERE
+                                toast.error("Failed to delete!", {
+                                    position: "top-center",
+                                    style: {
+                                        background: "#dc2626",
+                                        color: "#fff",
+                                        borderRadius: "10px",
+                                        padding: "10px 16px",
+                                        fontWeight: "600",
+                                    },
+                                });
+                            }
+
                             onClose();
                         }}
-                        className={`flex-1 px-4 py-2.5 rounded-xl text-white font-medium shadow-lg transition transform active:scale-95 cursor-pointer ${isDanger
+                        className={`flex-1 px-4 py-2.5 rounded-full text-white font-medium shadow-lg transition transform active:scale-95 cursor-pointer ${isDanger
                                 ? "bg-red-600 hover:bg-red-700 shadow-red-200"
                                 : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
                             }`}
                     >
                         {confirmText}
                     </button>
+
                 </div>
             </div>
 
