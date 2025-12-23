@@ -8,6 +8,8 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -147,7 +149,17 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
 
   // DRAG END
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 10, // 10px movement required to start dragging on desktop
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 1000, // 1 second long press for mobile
+        tolerance: 5, // Allow 5px of movement during the hold
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
