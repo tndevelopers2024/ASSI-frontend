@@ -1,8 +1,24 @@
 import { X, Upload, SendHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { SortableImage } from "./SortableImage";
 import ImageGrid from "./ImageGrid";
 import Comments from "./Comments";
 import { addComment } from "../api/postApi";
+import toast from "react-hot-toast";
 
 export default function CommentModal({
     open,
@@ -24,10 +40,23 @@ export default function CommentModal({
         ? data.user.profile_url
         : `${import.meta.env.VITE_API_URL}/${data.user?.profile_url?.replace(/^\/+/, "")}`;
 
+    // Sensors for DND
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
     if (!open) return null;
 
     const handleUpload = (e) => {
         const files = Array.from(e.target.files);
+
+        if (uploads.length + files.length > 10) {
+            toast.error("You can only upload up to 10 images.");
+            return;
+        }
 
         const mapped = files.map((file) => ({
             file,
@@ -39,7 +68,19 @@ export default function CommentModal({
     };
 
     const removeUpload = (index) => {
-        setUploads(uploads.filter((_, i) => i !== index));
+        setUploads(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+
+        if (active.id !== over.id) {
+            setUploads((prev) => {
+                const oldIndex = prev.findIndex((item) => item.preview === active.id);
+                const newIndex = prev.findIndex((item) => item.preview === over.id);
+                return arrayMove(prev, oldIndex, newIndex);
+            });
+        }
     };
 
     const handlePostComment = async () => {
@@ -178,49 +219,28 @@ export default function CommentModal({
                 {/* Uploaded Files Preview */}
                 {/* Uploaded Files Preview (Stylish + Drag to Reorder) */}
                 {uploads.length > 0 && (
-                    <div className="mt-4 flex gap-3 flex-wrap">
-                        {uploads.map((u, i) => (
-                            <div
-                                key={i}
-                                className="relative group cursor-move"
-                                draggable
-                                onDragStart={(e) => e.dataTransfer.setData("index", i)}
-                                onDragOver={(e) => e.preventDefault()}
-                                onDrop={(e) => {
-                                    const from = e.dataTransfer.getData("index");
-                                    const to = i;
-                                    if (from === to) return;
-
-                                    // Handle reorder
-                                    const updated = [...uploads];
-                                    const movedItem = updated[from];
-                                    updated.splice(from, 1);
-                                    updated.splice(to, 0, movedItem);
-
-                                    setUploads(updated);
-                                }}
-                            >
-                                {/* Preview Image */}
-                                <img
-                                    src={u.preview}
-                                    className="w-14 h-14 rounded-xl border border-[#e5e7eb] object-cover shadow-sm"
-                                />
-
-                                {/* Clean X Button */}
-                                <button
-                                    onClick={() => removeUpload(i)}
-                                    className="
-            absolute -top-2 -right-2 
-            w-5 h-5 flex items-center justify-center 
-            bg-white text-gray-700 rounded-full shadow-md 
-            opacity-0 group-hover:opacity-100 transition
-          "
-                                >
-                                    ✕
-                                </button>
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <SortableContext
+                            items={uploads.map(u => u.preview)}
+                            strategy={rectSortingStrategy}
+                        >
+                            <div className="mt-4 flex gap-3 flex-wrap">
+                                {uploads.map((u, i) => (
+                                    <SortableImage
+                                        key={u.preview}
+                                        id={u.preview}
+                                        src={u.preview}
+                                        onRemove={() => removeUpload(i)}
+                                        isSmall={true}
+                                    />
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        </SortableContext>
+                    </DndContext>
                 )}
 
 
@@ -244,7 +264,7 @@ export default function CommentModal({
                         {/* Upload Button */}
                         <label className="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-black">
                             <Upload size={18} />
-                            <span>Upload Documents</span>
+                            <span className="max-md:text-xs">Upload Documents</span>
                             <input
                                 type="file"
                                 multiple
@@ -258,7 +278,7 @@ export default function CommentModal({
                         <button
                             onClick={handlePostComment}
                             disabled={isPosting}
-                            className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-full cursor-pointer ${isPosting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
+                            className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-full cursor-pointer max-md:px-3 max-md:py-1 max-md:text-xs whitespace-nowrap ${isPosting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
                         >
                             {isPosting ? "Posting..." : "Post Comment"}
                             <SendHorizontal />

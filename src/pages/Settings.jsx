@@ -15,7 +15,9 @@ export default function Settings() {
     return (
         <div className="min-h-screen">
             <div className="">
-                <h2 className="text-2xl font-semibold mb-6">Settings</h2>
+                <div className="rounded-full bg-white px-4 py-2 w-fit mb-4 ml-4">
+                    <h2 className="text-sm font-semibold">Settings</h2>
+                </div>
 
                 {/* ACCOUNT INFO (view-only) */}
                 <div className="bg-white rounded-2xl shadow p-8 space-y-10">

@@ -3,8 +3,10 @@ import { X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useState } from "react";
 import ConfirmationModal from "./ConfirmationModal";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Comments({ comments = [], postId, highlightCommentId, onCommentAdded, onReplyClick }) {
+    const navigate = useNavigate();
     const [visibleCount, setVisibleCount] = useState(2);
     const [showAllReplies, setShowAllReplies] = useState(false);
     const [imagePopup, setImagePopup] = useState(null);
@@ -153,18 +155,18 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
 
 
     const confirmDelete = async () => {
-    if (!commentToDelete) return;
+        if (!commentToDelete) return;
 
-    // RETURN so ConfirmationModal can show toast correctly
-    return deleteComment(commentToDelete)
-        .then(() => {
-            if (onCommentAdded) onCommentAdded(); // Refresh comments
-        })
-        .finally(() => {
-            setDeleteModalOpen(false);
-            setCommentToDelete(null);
-        });
-};
+        // RETURN so ConfirmationModal can show toast correctly
+        return deleteComment(commentToDelete)
+            .then(() => {
+                if (onCommentAdded) onCommentAdded(); // Refresh comments
+            })
+            .finally(() => {
+                setDeleteModalOpen(false);
+                setCommentToDelete(null);
+            });
+    };
 
 
     const renderComment = (comment, isReply = false, depth = 0) => {
@@ -191,7 +193,7 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
         return (
             <div
                 key={comment._id}
-                                  // ⭐ Required for scroll + highlight
+                // ⭐ Required for scroll + highlight
                 className={`relative ${isReply ? "ml-12 mt-4" : "mb-4"}`}
             >
 
@@ -205,7 +207,7 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
                     {/* Avatar */}
                     <div
                         className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0 overflow-hidden cursor-pointer"
-                        onClick={() => window.location.href = `/profile/${comment.user?._id}`}
+                        onClick={() => navigate(`/profile/${comment.user?._id}`)}
                     >
                         {userProfilePic ? (
                             <img
@@ -223,7 +225,7 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
                         <div className="flex justify-between items-start">
                             <p
                                 className="font-bold text-gray-900 cursor-pointer hover:underline max-md:text-[12px]"
-                                onClick={() => window.location.href = `/profile/${comment.user?._id}`}
+                                onClick={() => navigate(`/profile/${comment.user?._id}`)}
                             >
                                 {userName}
                             </p>

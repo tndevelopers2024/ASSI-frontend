@@ -1,15 +1,14 @@
-import { useEffect, useState } from "react";
-import { getAllPosts } from "../api/postApi";
+import { useEffect, useState, useRef, useCallback } from "react";
 import CaseCard from "../components/CaseCard";
 import UploadCaseModal from "../components/UploadCaseModal";
 import { SlidersHorizontal, X as XIcon } from "lucide-react"; // Filter icon
-import { io } from "socket.io-client";
-const socket = io(import.meta.env.VITE_API_URL);
+import { usePosts } from "../context/PostContext";
+import { PostSkeleton } from "../components/Skeleton";
 
 import { useSearch } from "../context/SearchContext";
 
 export default function Home() {
-    const [posts, setPosts] = useState([]);
+    const { posts, loading } = usePosts();
     const [filteredPosts, setFilteredPosts] = useState([]);
     const [filtersApplied, setFiltersApplied] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
@@ -20,49 +19,25 @@ export default function Home() {
     const [selectedCategories, setSelectedCategories] = useState([]);
     const { searchQuery } = useSearch();
 
-    const shuffleArray = (array) => {
-        return array
-            .map((item) => ({ item, sort: Math.random() }))
-            .sort((a, b) => a.sort - b.sort)
-            .map(({ item }) => item);
-    };
+    // Pagination State
+    const [visibleCount, setVisibleCount] = useState(5);
+    const observer = useRef();
 
-    useEffect(() => {
-        loadPosts();
-    }, []);
+    const lastPostElementRef = useCallback(node => {
+        if (loading) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && visibleCount < filteredPosts.length) {
+                setVisibleCount(prev => prev + 5);
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, filteredPosts.length, visibleCount]);
 
     useEffect(() => {
         filterPosts();
+        setVisibleCount(5); // Reset count on filter/search change
     }, [searchQuery, selectedCategories, posts]);
-
-    const loadPosts = async () => {
-    try {
-        const data = await getAllPosts();
-
-        // Shuffle posts randomly
-        const shuffled = shuffleArray(data);
-
-        setPosts(shuffled);
-        setFilteredPosts(shuffled);
-    } catch (error) {
-        console.error("Error loading posts:", error);
-    }
-};
-
-useEffect(() => {
-  socket.on("post:new", post => {
-    setPosts(prev => [post, ...prev]); // Add new post to top
-  });
-
-  socket.on("post:updated", updated => {
-    setPosts(prev => prev.map(p => p._id === updated._id ? updated : p));
-  });
-
-  return () => {
-    socket.off("post:new");
-    socket.off("post:updated");
-  };
-}, []);
 
 
     const filterPosts = () => {
@@ -125,22 +100,37 @@ useEffect(() => {
                 </div>
 
                 {/* POSTS */}
-                {filteredPosts.length === 0 ? (
+                {loading ? (
+                    <div className="space-y-4">
+                        {[1, 2, 3].map((n) => <PostSkeleton key={n} />)}
+                    </div>
+                ) : filteredPosts.length === 0 ? (
                     <div className="bg-white p-10 rounded-xl shadow text-center text-gray-500">
                         No cases available yet.
                     </div>
                 ) : (
                     <div className="space-y-5">
-                        {filteredPosts.map((post) => (
-                            <CaseCard
-                                key={post._id}
-                                data={post}
-                                onUpdate={(postToEdit) => {
-                                    setEditingPost(postToEdit);
-                                    setUploadModalOpen(true);
-                                }}
-                            />
-                        ))}
+                        {filteredPosts.slice(0, visibleCount).map((post, index) => {
+                            const isLastElement = filteredPosts.slice(0, visibleCount).length === index + 1;
+                            return (
+                                <div key={post._id} ref={isLastElement ? lastPostElementRef : null}>
+                                    <CaseCard
+                                        data={post}
+                                        onUpdate={(postToEdit) => {
+                                            setEditingPost(postToEdit);
+                                            setUploadModalOpen(true);
+                                        }}
+                                    />
+                                </div>
+                            );
+                        })}
+
+                        {/* Loading more skeleton */}
+                        {visibleCount < filteredPosts.length && (
+                            <div className="mt-4">
+                                <PostSkeleton />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

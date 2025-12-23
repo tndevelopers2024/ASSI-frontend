@@ -1,33 +1,13 @@
-import { useEffect, useState } from "react";
-import { getAllPosts } from "../api/postApi";
+import { usePosts } from "../context/PostContext";
 import { useNavigate } from "react-router-dom";
+import { SidebarSkeleton } from "./Skeleton";
 
 export default function RightSidebar() {
   const navigate = useNavigate();
+  const { recentPosts, loading } = usePosts();
 
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadPosts();
-  }, []);
-
-  const loadPosts = async () => {
-    try {
-      // ✅ getAllPosts() RETURNS THE ARRAY DIRECTLY
-      const data = await getAllPosts();
-
-      console.log("Sidebar posts:", data);  // SHOULD SHOW ARRAY OF POSTS
-
-      setPosts(Array.isArray(data) ? data : []);
-
-    } catch (err) {
-      console.error("Sidebar post fetch error:", err);
-      setPosts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Show the first 5 posts from the chronological list
+  const recentItems = recentPosts.slice(0, 5);
 
   return (
     <div className="overflow-y-auto relative p-4 max-md:hidden">
@@ -38,12 +18,14 @@ export default function RightSidebar() {
           <h2 className="font-semibold mb-3 text-[#2563eb]">Recent Posts</h2>
 
           {loading ? (
-            <p className="text-gray-400 text-sm">Loading...</p>
-          ) : posts.length === 0 ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((n) => <SidebarSkeleton key={n} />)}
+            </div>
+          ) : recentItems.length === 0 ? (
             <p className="text-gray-500 text-sm">No posts found</p>
           ) : (
             <ul className="space-y-2">
-              {posts.map((post) => (
+              {recentItems.map((post) => (
                 <li
                   key={post._id}
                   className="grid grid-cols-[1fr_auto] text-sm hover:text-blue-600 cursor-pointer"
@@ -60,12 +42,14 @@ export default function RightSidebar() {
           <h2 className="font-semibold mb-3 text-[#2563eb]">Recent Cases</h2>
 
           {loading ? (
-            <p className="text-gray-400 text-sm">Loading...</p>
-          ) : posts.length === 0 ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((n) => <SidebarSkeleton key={n} />)}
+            </div>
+          ) : recentItems.length === 0 ? (
             <p className="text-gray-500 text-sm">No posts found</p>
           ) : (
             <ul className="space-y-2">
-              {posts.map((post) => (
+              {recentItems.map((post) => (
                 <li
                   key={post._id}
                   className="grid grid-cols-[1fr_auto] text-sm hover:text-blue-600 cursor-pointer"

@@ -6,13 +6,14 @@ import ConfirmationModal from "./ConfirmationModal";
 import { MoreVertical, Trash2, Edit, Bookmark } from "lucide-react";
 import API from "../api/api";
 import { getComments, deletePost, toggleSavePost } from "../api/postApi";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 
 export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId }) {
     if (!data) return null;
     const location = useLocation();
+    const navigate = useNavigate();
     const [openModal, setOpenModal] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [comments, setComments] = useState([]);
@@ -117,8 +118,6 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
             });
 
             if (onDelete) onDelete(data._id);
-
-            window.location.reload();
         } catch (error) {
             toast.error("Failed to delete post!", {
                 position: "top-center",
@@ -189,7 +188,7 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
 
                                 <span
                                     className="font-semibold text-[15px] max-md:text-[12px] cursor-pointer hover:underline"
-                                    onClick={() => window.location.href = `/profile/${data.user?._id}`}
+                                    onClick={() => navigate(`/profile/${data.user?._id}`)}
                                 >
                                     {data.user.fullname}
                                 </span>

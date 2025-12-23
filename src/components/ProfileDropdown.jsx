@@ -1,6 +1,8 @@
 import { LogOut, User, Image as ImageIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function ProfileDropdown({ onLogout, onEditImage, user }) {
+  const navigate = useNavigate();
   return (
     <div className="absolute right-0 mt-3 w-64 rounded-2xl shadow-xl overflow-hidden z-50 animate-fadeIn">
 
@@ -42,7 +44,7 @@ export default function ProfileDropdown({ onLogout, onEditImage, user }) {
 
         {/* My Profile */}
         <button
-          onClick={() => (window.location.href = "/profile")}
+          onClick={() => navigate("/profile")}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-sm text-gray-700 cursor-pointer"
         >
           <User size={18} className="text-purple-600" />

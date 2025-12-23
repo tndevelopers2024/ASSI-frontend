@@ -1,15 +1,18 @@
 import { Bell, Search, ChevronDown, Plus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api/api";  // ✅ MISSING IMPORT (required)
 import UploadCaseModal from "../components/UploadCaseModal";
 import ProfileDropdown from "../components/ProfileDropdown";
 import EditProfileImageModal from "../components/EditProfileImageModal";
 import { io } from "socket.io-client";
+import { useModal } from "../context/ModalContext";
 
 import { useSearch } from "../context/SearchContext";
 
 export default function Topbar() {
-  const [openModal, setOpenModal] = useState(false);
+  const navigate = useNavigate();
+  const { openUploadModal } = useModal();
   const [openDropdown, setOpenDropdown] = useState(false);
   const [editImageOpen, setEditImageOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -80,7 +83,7 @@ export default function Topbar() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.href = "/login";
+    navigate("/login");
   };
 
   // Upload profile picture
@@ -97,8 +100,7 @@ export default function Topbar() {
 
       // Update stored user
       localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      window.location.reload();
+      setUser(res.data.user); // Update local state to reflect change without reload
     } catch (err) {
       console.error("Profile upload error:", err);
     }
@@ -108,7 +110,7 @@ export default function Topbar() {
     <div className="w-full bg-white border-b border-[#E5E7EB] px-6 py-3 flex items-center justify-between shadow-sm">
 
       {/* Search Bar */}
-      <div className="w-1/3 max-md:w-1/2">
+      <div className="w-1/3 max-md:w-2/3">
         <div className="flex items-center bg-gray-100 px-4 py-2 rounded-full">
           <Search size={16} className="text-gray-500 mr-2" />
           <input
@@ -125,13 +127,13 @@ export default function Topbar() {
       <div className="flex items-center gap-5">
 
         <button
-          onClick={() => setOpenModal(true)}
-          className="bg-blue-600 text-white px-5 py-2 rounded-full max-md:py-3 max-md:px-3 text-sm hover:bg-blue-700 cursor-pointer flex items-center gap-2"
+          onClick={() => openUploadModal()}
+          className="bg-blue-600 text-white px-5 py-2 rounded-full hidden md:flex text-sm hover:bg-blue-700 cursor-pointer items-center gap-2"
         >
-          <p className="max-md:hidden">Add Your Case</p> <Plus size={16} />
+          <p>Add Your Case</p> <Plus size={16} />
         </button>
 
-        <div className="relative cursor-pointer" onClick={() => window.location.href = "/notifications"}>
+        <div className="relative cursor-pointer" onClick={() => navigate("/notifications")}>
 
           {/* ⭐ Tooltip (shows for 2 seconds) */}
           {showTooltip && (
@@ -194,9 +196,6 @@ export default function Topbar() {
           )}
         </div>
       </div>
-
-      <UploadCaseModal open={openModal} onClose={() => setOpenModal(false)} />
-
       <EditProfileImageModal
         open={editImageOpen}
         onClose={() => setEditImageOpen(false)}

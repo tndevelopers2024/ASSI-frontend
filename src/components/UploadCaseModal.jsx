@@ -3,6 +3,22 @@ import { useState, useEffect, useMemo } from "react";
 import { createPost, updatePost } from "../api/postApi";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { SortableImage } from "./SortableImage";
+
 const socket = io(import.meta.env.VITE_API_URL);
 
 
@@ -13,7 +29,6 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
   const [category, setCategory] = useState("");
   const [newImages, setNewImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
-  const [dragIndex, setDragIndex] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [errors, setErrors] = useState({
@@ -28,15 +43,19 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
   // ✅ COMBINED IMAGES (must be above any return)
   const combinedImages = useMemo(() => {
     return [
-      ...existingImages.map((img) => ({
+      ...existingImages.map((img, idx) => ({
+        id: `existing-${idx}-${img}`,
         src: img,
-        type: "existing"
+        type: "existing",
+        originalIndex: idx
       })),
       ...newImages.map((file, index) => ({
+        id: `new-${index}-${file.name}`,
         src: URL.createObjectURL(file),
         file,
         fileIndex: index,
-        type: "new"
+        type: "new",
+        originalIndex: index
       }))
     ];
   }, [existingImages, newImages]);
@@ -58,12 +77,16 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
     }
   }, [initialData, open]);
 
-  // ❗ MUST COME AFTER HOOKS
-  if (!open) return null;
 
   // IMAGE UPLOAD
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
+
+    if (combinedImages.length + files.length > 10) {
+      toast.error("You can only upload up to 10 images.");
+      return;
+    }
+
     setNewImages((prev) => [...prev, ...files]);
   };
 
@@ -77,77 +100,82 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
 
   // SUBMIT
   const handleSubmit = async () => {
-  if (isPosting) return;
+    if (isPosting) return;
 
-  const newErrors = {
-    title: title ? "" : "Title is required",
-    caseText: caseText ? "" : "Case description is required",
-    category: category ? "" : "Tag is required",
-  };
-
-  setErrors(newErrors);
-  if (Object.values(newErrors).some((msg) => msg !== "")) return;
-
-  setIsPosting(true);
-
-  try {
-    const payload = {
-      title,
-      content: caseText,
-      category,
+    const newErrors = {
+      title: title ? "" : "Title is required",
+      caseText: caseText ? "" : "Case description is required",
+      category: category ? "" : "Tag is required",
     };
 
-    let response;
+    setErrors(newErrors);
+    if (Object.values(newErrors).some((msg) => msg !== "")) return;
 
-    if (initialData) {
-      response = await updatePost(initialData._id, payload, newImages, existingImages);
-      toast.success("Post updated!");
-      socket.emit("post:updated", response);
-    } else {
-      response = await createPost(payload, newImages);
-      toast.success("Post created!");
-      socket.emit("post:new", response);
+    setIsPosting(true);
+
+    try {
+      const payload = {
+        title,
+        content: caseText,
+        category,
+      };
+
+      let response;
+
+      if (initialData) {
+        response = await updatePost(initialData._id, payload, newImages, existingImages);
+        toast.success("Post updated!");
+        socket.emit("post:updated", response);
+      } else {
+        response = await createPost(payload, newImages);
+        toast.success("Post created!");
+        socket.emit("post:new", response);
+      }
+
+      onClose();
+      setIsPosting(false);
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload post");
+      setIsPosting(false);
     }
-
-    onClose();
-    setIsPosting(false);
-
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to upload post");
-    setIsPosting(false);
-  }
-};
-
-
-
-
-  // DRAG EVENTS
-  const handleDragStart = (index) => {
-    setDragIndex(index);
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
 
-  const handleDrop = (index) => {
-    const updated = [...combinedImages];
-    const [movedItem] = updated.splice(dragIndex, 1);
-    updated.splice(index, 0, movedItem);
 
-    const newExisting = [];
-    const newNew = [];
 
-    updated.forEach((item) => {
-      if (item.type === "existing") newExisting.push(item.src);
-      else newNew.push(item.file);
-    });
+  // DRAG END
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
-    setExistingImages(newExisting);
-    setNewImages(newNew);
+  // ❗ MUST COME AFTER HOOKS
+  if (!open) return null;
 
-    setDragIndex(null);
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      const oldIndex = combinedImages.findIndex((item) => item.id === active.id);
+      const newIndex = combinedImages.findIndex((item) => item.id === over.id);
+
+      const updated = arrayMove(combinedImages, oldIndex, newIndex);
+
+      const newExisting = [];
+      const newNew = [];
+
+      updated.forEach((item) => {
+        if (item.type === "existing") newExisting.push(item.src);
+        else newNew.push(item.file);
+      });
+
+      setExistingImages(newExisting);
+      setNewImages(newNew);
+    }
   };
 
   return (
@@ -287,36 +315,31 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
 
           {/* IMAGE PREVIEWS */}
           {(existingImages.length > 0 || newImages.length > 0) && (
-            <div className="flex flex-wrap gap-3 mt-2">
-              {combinedImages.map((item, idx) => (
-                <div
-                  key={idx}
-                  draggable
-                  onDragStart={() => handleDragStart(idx)}
-                  onDragOver={handleDragOver}
-                  onDrop={() => handleDrop(idx)}
-                  className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 group cursor-move"
-                >
-                  <img
-                    src={item.type === "existing" ? `${BASE_URL}/${item.src}` : item.src}
-                    alt="preview"
-                    className="w-full h-full object-cover"
-                  />
-
-                  {/* REMOVE BUTTON */}
-                  <button
-                    onClick={() =>
-                      item.type === "existing"
-                        ? removeExistingImage(existingImages.indexOf(item.src))
-                        : removeNewImage(item.fileIndex)
-                    }
-                    className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500 hover:bg-white cursor-pointer"
-                  >
-                    <X size={12} />
-                  </button>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={combinedImages.map(item => item.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="flex flex-wrap gap-3 mt-2">
+                  {combinedImages.map((item, idx) => (
+                    <SortableImage
+                      key={item.id}
+                      id={item.id}
+                      src={item.type === "existing" ? `${BASE_URL}/${item.src}` : item.src}
+                      onRemove={() =>
+                        item.type === "existing"
+                          ? removeExistingImage(existingImages.indexOf(item.src))
+                          : removeNewImage(item.fileIndex)
+                      }
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
 
           {/* BUTTONS */}
