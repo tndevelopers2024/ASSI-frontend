@@ -5,6 +5,7 @@ import ConfirmationModal from "./ConfirmationModal";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import InlineCommentBox from "./InlineCommentBox";
+import { renderTextWithLinks } from "../utils/textUtils";
 
 export default function Comments({ comments = [], postId, highlightCommentId, onCommentAdded }) {
     const navigate = useNavigate();
@@ -260,7 +261,7 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
                             )}
                         </div>
 
-                        <p className="text-gray-700 mt-1 text-sm max-md:text-[10px] leading-relaxed">{commentText}</p>
+                        <p className="text-gray-700 mt-1 text-sm max-md:text-[10px] leading-relaxed">{renderTextWithLinks(commentText)}</p>
 
                         {/* Comment Images */}
                         {commentImages.length > 0 && (

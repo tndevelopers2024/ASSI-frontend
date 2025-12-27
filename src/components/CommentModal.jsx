@@ -21,6 +21,7 @@ import ImageGrid from "./ImageGrid";
 import Comments from "./Comments";
 import { addComment } from "../api/postApi";
 import toast from "react-hot-toast";
+import { renderTextWithLinks } from "../utils/textUtils";
 
 export default function CommentModal({
     open,
@@ -209,7 +210,7 @@ export default function CommentModal({
 
                 {/* Description + See more */}
                 <p className={`text-gray-700 mt-2 ${expanded ? "" : "line-clamp-3"}`}>
-                    {expanded ? data.description : shortText}
+                    {expanded ? renderTextWithLinks(data.description) : renderTextWithLinks(shortText)}
                 </p>
 
                 {data.description.length > 180 && (

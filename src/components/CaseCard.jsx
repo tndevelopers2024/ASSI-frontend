@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import InlineCommentBox from "./InlineCommentBox";
 import { getSocket } from "../utils/socket";
 import { usePosts } from "../context/PostContext";
+import { renderTextWithLinks } from "../utils/textUtils";
 
 
 export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId }) {
@@ -326,7 +327,7 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                             className={`text-gray-700 text-[14px] leading-relaxed whitespace-pre-line ${expanded ? "" : "line-clamp-4"
                                 }`}
                         >
-                            {data.content}
+                            {renderTextWithLinks(data.content)}
                         </p>
 
                         {/* See more / See less button */}
