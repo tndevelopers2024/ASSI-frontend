@@ -17,6 +17,7 @@ export default function Home() {
 
     // Selected categories
     const [selectedCategories, setSelectedCategories] = useState([]);
+    const [sortBy, setSortBy] = useState("recent");
     const { searchQuery } = useSearch();
 
     // Pagination State
@@ -37,11 +38,11 @@ export default function Home() {
     useEffect(() => {
         filterPosts();
         setVisibleCount(5); // Reset count on filter/search change
-    }, [searchQuery, selectedCategories, posts]);
+    }, [searchQuery, selectedCategories, sortBy, posts]);
 
 
     const filterPosts = () => {
-        let result = posts;
+        let result = [...posts];
 
         // 1. Filter by Category
         if (selectedCategories.length > 0) {
@@ -58,8 +59,21 @@ export default function Home() {
             );
         }
 
+        // 3. Sort
+        if (sortBy === "recent") {
+            result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        } else if (sortBy === "popular") {
+            result.sort((a, b) => {
+                const aPop = (a.likes?.length || 0) + (a.comments?.length || 0);
+                const bPop = (b.likes?.length || 0) + (b.comments?.length || 0);
+                return bPop - aPop;
+            });
+        } else if (sortBy === "random") {
+            result.sort(() => Math.random() - 0.5);
+        }
+
         setFilteredPosts(result);
-        setFiltersApplied(selectedCategories.length > 0 || !!searchQuery);
+        setFiltersApplied(selectedCategories.length > 0 || !!searchQuery || sortBy !== "recent");
     };
 
     const categories = [
@@ -146,11 +160,43 @@ export default function Home() {
                             <XIcon size={24} />
                         </button>
 
-                        <h2 className="text-xl font-semibold text-center mb-4">
-                            Filter Cases
+                        <h2 className="text-xl font-semibold text-center mb-6">
+                            Filter & Sort
                         </h2>
 
-                        <p className="text-sm font-semibold text-[#1A3A7D] mb-2">Categories</p>
+                        {/* SORT BY SECTION */}
+                        <p className="text-sm font-semibold text-[#1A3A7D] mb-3">Sort By</p>
+                        <div className="flex gap-2 mb-8">
+                            <button
+                                onClick={() => setSortBy("recent")}
+                                className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${sortBy === "recent"
+                                        ? "bg-blue-600 text-white shadow-md transform scale-105"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    }`}
+                            >
+                                Recent
+                            </button>
+                            <button
+                                onClick={() => setSortBy("popular")}
+                                className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${sortBy === "popular"
+                                        ? "bg-blue-600 text-white shadow-md transform scale-105"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    }`}
+                            >
+                                Popular
+                            </button>
+                            <button
+                                onClick={() => setSortBy("random")}
+                                className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${sortBy === "random"
+                                        ? "bg-blue-600 text-white shadow-md transform scale-105"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    }`}
+                            >
+                                Random
+                            </button>
+                        </div>
+
+                        <p className="text-sm font-semibold text-[#1A3A7D] mb-3">Categories</p>
 
                         {/* CATEGORY CHECKBOXES */}
                         <div className="grid grid-cols-2 gap-3">
@@ -176,13 +222,13 @@ export default function Home() {
                         <div className="flex justify-between mt-8">
 
                             <button
-                                className="px-5 py-2 rounded-full border hover:bg-gray-100 cursor-pointer"
+                                className="px-5 py-2 rounded-full border hover:bg-gray-100 cursor-pointer text-sm font-medium"
                                 onClick={() => {
                                     setSelectedCategories([]);
-                                    // Filter will automatically update due to useEffect
+                                    setSortBy("recent");
                                 }}
                             >
-                                Reset
+                                Reset Filters
                             </button>
 
                             <button

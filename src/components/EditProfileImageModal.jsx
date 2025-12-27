@@ -1,17 +1,31 @@
 import { X, UploadCloud } from "lucide-react";
 import { useState } from "react";
+import { compressImage } from "../utils/imageUtils";
+import toast from "react-hot-toast";
 
 export default function EditProfileImageModal({ open, onClose, onUpload }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   if (!open) return null;
 
-  const handleFileChange = (f) => {
+  const handleFileChange = async (f) => {
     const picked = f[0];
     if (picked) {
-      setFile(picked);
-      setPreview(URL.createObjectURL(picked));
+      setIsCompressing(true);
+      try {
+        const compressed = await compressImage(picked, { quality: 0.8 });
+        setFile(compressed);
+        setPreview(URL.createObjectURL(compressed));
+      } catch (err) {
+        console.error("Compression failed", err);
+        setFile(picked);
+        setPreview(URL.createObjectURL(picked));
+        toast.error("Failed to compress image, using original.");
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -70,9 +84,9 @@ export default function EditProfileImageModal({ open, onClose, onUpload }) {
           <button
             onClick={handleUpload}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300 cursor-pointer"
-            disabled={!file}
+            disabled={!file || isCompressing}
           >
-            Save
+            {isCompressing ? "Processing..." : "Save"}
           </button>
         </div>
       </div>

@@ -57,33 +57,39 @@ export const deletePost = async (id) => {
 
 // Update a post
 export const updatePost = async (id, postData, images, existingImages) => {
-  const formData = new FormData();
+    const formData = new FormData();
 
-  formData.append("title", postData.title);
-  formData.append("content", postData.content);
-  formData.append("category", postData.category);
+    formData.append("title", postData.title);
+    formData.append("content", postData.content);
+    formData.append("category", postData.category);
 
-  // New images
-  if (images && images.length > 0) {
-    images.forEach((img) => {
-      formData.append("images", img);
+    // New images
+    if (images && images.length > 0) {
+        images.forEach((img) => {
+            formData.append("images", img);
+        });
+    }
+
+    // Important: send existing images as ONE JSON string
+    formData.append("existingImages", JSON.stringify(existingImages || []));
+
+    const res = await API.put(`/posts/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
     });
-  }
 
-  // Important: send existing images as ONE JSON string
-  formData.append("existingImages", JSON.stringify(existingImages || []));
-
-  const res = await API.put(`/posts/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-
-  return res.data;
+    return res.data;
 };
 
 
 // Toggle save post
 export const toggleSavePost = async (id) => {
     const res = await API.put(`/posts/save/${id}`);
+    return res.data;
+};
+
+// Toggle like post
+export const toggleLikePost = async (id) => {
+    const res = await API.put(`/posts/like/${id}`);
     return res.data;
 };
 
@@ -98,4 +104,3 @@ export const getUserComments = async () => {
     const res = await API.get("/comments/user/all");
     return res.data;
 };
-

@@ -2,7 +2,8 @@ import { X, UploadCloud, ChevronDown } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { createPost, updatePost } from "../api/postApi";
 import toast from "react-hot-toast";
-import { io } from "socket.io-client";
+import { compressImage } from "../utils/imageUtils";
+import { getSocket } from "../utils/socket";
 import {
   DndContext,
   closestCenter,
@@ -21,11 +22,8 @@ import {
 } from "@dnd-kit/sortable";
 import { SortableImage } from "./SortableImage";
 
-const socket = io(import.meta.env.VITE_API_URL);
-
-
-
 export default function UploadCaseModal({ open, onClose, initialData = null }) {
+  const socket = getSocket();
   const [title, setTitle] = useState("");
   const [caseText, setCaseText] = useState("");
   const [category, setCategory] = useState("");
@@ -81,7 +79,7 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
 
 
   // IMAGE UPLOAD
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
 
     if (combinedImages.length + files.length > 10) {
@@ -89,7 +87,20 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
       return;
     }
 
-    setNewImages((prev) => [...prev, ...files]);
+    const compressionToast = files.length > 1 ? toast.loading("Compressing images...") : null;
+
+    try {
+      const compressedFiles = await Promise.all(
+        files.map(file => compressImage(file))
+      );
+
+      setNewImages((prev) => [...prev, ...compressedFiles]);
+      if (compressionToast) toast.success("Images ready!", { id: compressionToast });
+    } catch (err) {
+      console.error("Compression failed", err);
+      setNewImages((prev) => [...prev, ...files]); // fallback to original
+      if (compressionToast) toast.error("Some images failed to compress, using originals.", { id: compressionToast });
+    }
   };
 
   const removeNewImage = (index) => {
@@ -207,7 +218,6 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
         {/* BODY */}
         <div className="px-8 py-6 ">
           {/* SECTION TITLE */}
-          <p className="text-sm font-semibold text-[#1A3A7D] mb-2">Text</p>
 
           <div className="space-y-4">
             <div>
@@ -230,7 +240,7 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
             <div>
               <textarea
                 rows={4}
-                placeholder="Case*"
+                placeholder="Description*"
                 className={`w-full border p-3 rounded-xl outline-none resize-none focus:ring-2 
       ${errors.caseText ? "border-red-500 ring-red-200" : "border-gray-300 focus:ring-blue-300"}
     `}

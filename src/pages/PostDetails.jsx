@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import API from "../api/api";
 import CaseCard from "../components/CaseCard";
+import UploadCaseModal from "../components/UploadCaseModal";
 
 export default function PostDetails() {
   const { postId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const [post, setPost] = useState(null);
+  const [editingPost, setEditingPost] = useState(null);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   // Extract commentId from URL
   const queryParams = new URLSearchParams(location.search);
@@ -29,7 +33,28 @@ export default function PostDetails() {
 
   return (
     <div className="p-6">
-      <CaseCard data={post} highlightCommentId={highlightCommentId} />
+      <CaseCard
+        data={post}
+        highlightCommentId={highlightCommentId}
+        onUpdate={(postToEdit) => {
+          setEditingPost(postToEdit);
+          setUploadModalOpen(true);
+        }}
+        onDelete={() => {
+          navigate("/");
+        }}
+      />
+
+      {/* Upload/Edit Modal */}
+      <UploadCaseModal
+        open={uploadModalOpen}
+        onClose={() => {
+          setUploadModalOpen(false);
+          setEditingPost(null);
+          loadPost(); // Refresh post data after edit
+        }}
+        initialData={editingPost}
+      />
     </div>
   );
 }

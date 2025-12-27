@@ -16,19 +16,42 @@ export default function Notifications() {
         try {
             const res = await API.get("/notifications");
 
-            // ⛔ FILTER OUT deleted posts/comments
+            // ⛔ FILTER OUT deleted posts
             const filtered = res.data.filter(
-                (n) => n.post?._id && n.comment?._id
+                (n) => n.post?._id && (n.type === "like" || n.comment?._id)
             );
 
             setNotifications(filtered);
-
-            await API.put("/notifications/mark-read");
         } catch (err) {
             console.error("Error loading notifications:", err);
         } finally {
             setLoading(false);
         }
+    };
+
+    const timeAgo = (timestamp) => {
+        const now = new Date();
+        const past = new Date(timestamp);
+        const seconds = Math.floor((now - past) / 1000);
+
+        if (seconds < 60) return "Just now";
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
+
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+
+        const days = Math.floor(hours / 24);
+        if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
+
+        const weeks = Math.floor(days / 7);
+        if (weeks < 4) return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
+
+        const months = Math.floor(days / 30);
+        if (months < 12) return `${months} month${months > 1 ? "s" : ""} ago`;
+
+        const years = Math.floor(days / 365);
+        return `${years} year${years > 1 ? "s" : ""} ago`;
     };
 
     return (
@@ -74,13 +97,24 @@ export default function Notifications() {
                             <div
                                 key={n._id}
                                 onClick={async () => {
-                                    // Mark only this notification as read
+                                    // Instant UI feedback
+                                    setNotifications(prev => prev.map(item =>
+                                        item._id === n._id ? { ...item, read: true } : item
+                                    ));
+
+                                    // Mark only this notification as read in backend
                                     await API.put(`/notifications/mark-one-read/${n._id}`);
 
-                                    navigate(`/post/${n.post._id}?comment=${n.comment._id}`);
+                                    // Navigate and trigger a reload to refresh the Topbar badge 
+                                    // (Better way would be context, but reload is consistent with current architecture)
+                                    if (n.type === "like") {
+                                        window.location.href = `/post/${n.post._id}`;
+                                    } else {
+                                        window.location.href = `/post/${n.post._id}?comment=${n.comment?._id}`;
+                                    }
                                 }}
                                 className={`flex items-start gap-4 p-4 rounded-xl border 
-                                ${n.isRead ? "bg-white" : "bg-blue-50 border-blue-200"} 
+                                ${n.read ? "bg-white" : "bg-blue-50 border-blue-200"} 
                                 hover:shadow-md hover:bg-gray-50 transition-all cursor-pointer`}
                             >
                                 {/* Profile Image */}
@@ -108,7 +142,7 @@ export default function Notifications() {
                                         {n.message}
                                     </p>
                                     <p className="text-xs text-gray-400 mt-1">
-                                        {new Date(n.createdAt).toLocaleString()}
+                                        {timeAgo(n.createdAt)}
                                     </p>
                                 </div>
                             </div>

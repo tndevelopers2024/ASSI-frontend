@@ -5,7 +5,7 @@ import API from "../api/api";  // ✅ MISSING IMPORT (required)
 import UploadCaseModal from "../components/UploadCaseModal";
 import ProfileDropdown from "../components/ProfileDropdown";
 import EditProfileImageModal from "../components/EditProfileImageModal";
-import { io } from "socket.io-client";
+import { getSocket } from "../utils/socket";
 import { useModal } from "../context/ModalContext";
 
 import { useSearch } from "../context/SearchContext";
@@ -20,34 +20,42 @@ export default function Topbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // Show tooltip for 2 seconds when unreadCount increases
+  // Handle New Notification Tooltip
+  const triggerTooltip = () => {
+    setShowTooltip(true);
+    setTimeout(() => {
+      setShowTooltip(false);
+    }, 4000);
+  };
+
+  // Fetch initial unread count
   useEffect(() => {
-    if (unreadCount > 0) {
-      setShowTooltip(true);
+    const fetchUnreadCount = async () => {
+      try {
+        if (!user?._id) return;
+        const res = await API.get("/notifications/unread-count");
+        setUnreadCount(res.data.count);
+      } catch (err) {
+        console.error("Error fetching unread count:", err);
+      }
+    };
 
-      const timer = setTimeout(() => {
-        setShowTooltip(false);
-      }, 4000); // 2 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [unreadCount]);
+    fetchUnreadCount();
+  }, [user?._id]);
 
 
   useEffect(() => {
     if (!user?._id) return;
 
-    // Connect to socket server
-    const socket = io(import.meta.env.VITE_API_URL, {
-      query: { userId: user._id },
-      transports: ["websocket"],
-    });
+    // Connect to global socket
+    const socket = getSocket(user._id);
 
     console.log("Socket connected:", socket.id);
 
     // Receive unread count updates instantly
     socket.on("notification:new", (data) => {
       setUnreadCount(data.count);
+      triggerTooltip(); // Only show tooltip when a new one arrives
     });
 
     // Optionally update when notifications marked as read

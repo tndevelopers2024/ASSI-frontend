@@ -99,15 +99,6 @@ export default function UserProfile() {
                 Posts
               </button>
 
-              <button
-                onClick={() => setActiveTab("comments")}
-                className={` ${activeTab === "comments"
-                  ? "text-blue-600 border-b-3 rounded-bl-sm rounded-br-sm border-blue-600 cursor-pointer"
-                  : "cursor-pointer"
-                  }`}
-              >
-                Comments
-              </button>
             </div>
           </div>
         </div>
@@ -122,12 +113,6 @@ export default function UserProfile() {
             ) : (
               posts.map((p) => <CaseCard key={p._id} data={p} />)
             )}
-          </div>
-        )}
-
-        {activeTab === "comments" && (
-          <div className="bg-white p-6 rounded-xl shadow text-gray-600">
-            No comments yet.
           </div>
         )}
       </div>

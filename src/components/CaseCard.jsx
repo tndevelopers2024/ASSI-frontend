@@ -3,14 +3,19 @@ import ImageGrid from "./ImageGrid";
 import Comments from "./Comments";
 import CommentModal from "./CommentModal";
 import ConfirmationModal from "./ConfirmationModal";
-import { MoreVertical, Trash2, Edit, Bookmark } from "lucide-react";
+import { MoreVertical, Trash2, Edit, Bookmark, Heart, MessageSquare } from "lucide-react";
 import API from "../api/api";
-import { getComments, deletePost, toggleSavePost } from "../api/postApi";
+import { getComments, deletePost, toggleSavePost, toggleLikePost } from "../api/postApi";
 import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import InlineCommentBox from "./InlineCommentBox";
+import { getSocket } from "../utils/socket";
+import { usePosts } from "../context/PostContext";
 
 
 export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId }) {
+    const socket = getSocket();
+    const { refreshPosts, syncPostUpdate } = usePosts();
     if (!data) return null;
     const location = useLocation();
     const navigate = useNavigate();
@@ -21,6 +26,8 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
     const [replyingToComment, setReplyingToComment] = useState(null);
     const [expanded, setExpanded] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [likesCount, setLikesCount] = useState(0);
     const menuRef = useRef(null);
     const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -28,12 +35,16 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const isOwner = currentUser._id === data.user?._id;
 
-    // Initialize isSaved state based on currentUser.savedPosts
+    // Initialize isSaved & isLiked state
     useEffect(() => {
         if (currentUser.savedPosts && currentUser.savedPosts.includes(data._id)) {
             setIsSaved(true);
         }
-    }, [data._id]);
+
+        // Initialize likes from the data prop (which is kept in sync by PostContext)
+        setLikesCount(data.likesCount ?? data.likes?.length ?? 0);
+        setIsLiked(data.likes?.some(id => (id._id || id) === currentUser._id) || false);
+    }, [data._id, data.likes, data.likesCount, currentUser._id]);
 
     const handleSave = async () => {
         // Optimistic update
@@ -61,6 +72,33 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
             setIsSaved(!newSavedState); // Revert on error
         }
     };
+
+    const handleLike = async () => {
+        // Optimistic update
+        const newLikeState = !isLiked;
+        setIsLiked(newLikeState);
+        setLikesCount(prev => newLikeState ? prev + 1 : prev - 1);
+
+        try {
+            const res = await toggleLikePost(data._id);
+            // 1. Immediate local update via context
+            syncPostUpdate(data._id, {
+                likes: res.likes,
+                likesCount: res.likes?.length
+            });
+            // 2. Broadcast for others
+            socket.emit("post:liked", res);
+        } catch (error) {
+            console.error("Error liking post:", error);
+            // Revert on error
+            setIsLiked(!newLikeState);
+            setLikesCount(prev => newLikeState ? prev - 1 : prev + 1);
+        }
+    };
+
+    // ... (rest of the component logic: fetchComments, etc.)
+
+    // (keep existing helper functions like timeAgo, etc.)
 
     // Fetch comments for this post
     useEffect(() => {
@@ -93,45 +131,32 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Profile image fix
-    const profileImage = data.user?.profile_url
-        ? `${BASE_URL}/${data.user.profile_url}`
-        : null;
-
-    // Post images fix
+    // Profile image fix & post images fix (keep existing)
+    const profileImage = data.user?.profile_url ? `${BASE_URL}/${data.user.profile_url}` : null;
     const postImages = data.images?.map((img) => `${BASE_URL}/${img}`);
 
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-
-    const handleDeleteClick = () => {
-        setDeleteModalOpen(true);
-        setShowMenu(false);
-    };
-
-
+    const handleDeleteClick = () => { setDeleteModalOpen(true); setShowMenu(false); };
     const confirmDelete = async () => {
         try {
             await deletePost(data._id);
-
-            toast.success("Post deleted successfully!", {
-                position: "top-center",
-            });
-
+            toast.success("Post deleted successfully!", { position: "top-center" });
             if (onDelete) onDelete(data._id);
         } catch (error) {
-            toast.error("Failed to delete post!", {
-                position: "top-center",
-            });
+            toast.error("Failed to delete post!", { position: "top-center" });
         } finally {
             setDeleteModalOpen(false);
         }
     };
+    const handleEdit = () => { if (onUpdate) onUpdate(data); setShowMenu(false); };
 
+    // timeAgo function ... (omitted for brevity in replacement block, assuming it is preserved or needs to be re-inserted if I am replacing the whole block. 
+    // Wait, replace_file_content replaces a block. I need to be careful not to delete timeAgo if I don't include it. 
+    // The instructions say "ReplacementContent" must be complete drop-in. 
+    // I will include the timeAgo function to be safe, or scope the edit to the top imports and the rendering part separately using multi_replace?
+    // The imports are at the top, and the rendering at the bottom. The state init is in the middle.
+    // I'll use multi_replace to be surgical.)
 
-    const handleEdit = () => {
-        if (onUpdate) onUpdate(data);
-        setShowMenu(false);
-    };
 
     const timeAgo = (timestamp) => {
         const now = new Date();
@@ -168,7 +193,17 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                     <div className="flex items-start gap-3">
 
                         {/* Profile image OR first letter */}
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-red-400 flex items-center justify-center text-white font-semibold text-lg">
+                        <div
+                            className="w-10 h-10 rounded-full overflow-hidden bg-red-400 flex items-center justify-center text-white font-semibold text-lg cursor-pointer"
+                            onClick={() => {
+                                const userId = data.user?._id || data.user;
+                                if (userId === currentUser._id) {
+                                    navigate("/profile");
+                                } else {
+                                    navigate(`/profile/${userId}`);
+                                }
+                            }}
+                        >
                             {data.user?.profile_url ? (
                                 <img
                                     src={`${import.meta.env.VITE_API_URL}/${data.user.profile_url}`}
@@ -188,7 +223,14 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
 
                                 <span
                                     className="font-semibold text-[15px] max-md:text-[12px] cursor-pointer hover:underline"
-                                    onClick={() => navigate(`/profile/${data.user?._id}`)}
+                                    onClick={() => {
+                                        const userId = data.user?._id || data.user;
+                                        if (userId === currentUser._id) {
+                                            navigate("/profile");
+                                        } else {
+                                            navigate(`/profile/${userId}`);
+                                        }
+                                    }}
                                 >
                                     {data.user.fullname}
                                 </span>
@@ -307,20 +349,48 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                     </div>
                 )}
 
-                {/* COMMENT BOX */}
-                <div className="mt-4 flex items-center gap-3">
-                    <input
-                        type="text"
-                        placeholder="Write a comment..."
-                        className="flex-1 p-3 rounded-full bg-gray-100 border border-gray-200 text-sm cursor-pointer outline-none focus:ring-2 focus:ring-blue-100 transition"
-                        onFocus={() => setOpenModal(true)}
-                    />
+                {/* COMMENT BOX AND SAVE BUTTON */}
+                <div className="mt-4 flex items-start gap-3">
+                    <div className="flex items-center gap-1 mt-1.5 ">
+                        <button
+                            onClick={handleLike}
+                            className={`group flex items-center gap-1.5 transition-all px-3 py-3 cursor-pointer rounded-full ${isLiked ? "bg-red-50 text-red-600" : "bg-gray-50 text-gray-600 hover:bg-gray-100"}`}
+                            title={isLiked ? "Unlike" : "Like"}
+                        >
+                            <Heart
+                                size={20}
+                                className={`transition-all ${isLiked ? "fill-red-600 text-red-600 scale-110" : "text-gray-500 group-hover:text-red-500"}`}
+                            />
+                            {likesCount > 0 && (
+                                <span className="text-sm font-medium">{likesCount}</span>
+                            )}
+                        </button>
+
+                        <div
+                            className="flex items-center gap-1.5 bg-gray-50 text-gray-600 px-3 py-3 rounded-full"
+                        >
+                            <MessageSquare size={20} className="text-gray-500" />
+                            <span className="text-sm font-medium">
+                                {data.commentsCount ?? data.commentCount ?? data.comments?.length ?? 0}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex-1">
+                        <InlineCommentBox
+                            postId={data._id}
+                            onCommentAdded={async () => {
+                                const fetchedComments = await getComments(data._id);
+                                setComments(fetchedComments);
+                            }}
+                        />
+                    </div>
 
                     {/* Save Button */}
                     <button
-                        className={`w-10 h-10 rounded-full flex items-center justify-center transition cursor-pointer ${isSaved ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition cursor-pointer flex-shrink-0 mt-1 ${isSaved ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
                         onClick={handleSave}
+                        title={isSaved ? "Unsave Post" : "Save Post"}
                     >
                         <Bookmark size={20} className={isSaved ? "fill-current" : ""} />
                     </button>

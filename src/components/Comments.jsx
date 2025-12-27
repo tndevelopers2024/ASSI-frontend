@@ -4,8 +4,9 @@ import { useState } from "react";
 import ConfirmationModal from "./ConfirmationModal";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import InlineCommentBox from "./InlineCommentBox";
 
-export default function Comments({ comments = [], postId, highlightCommentId, onCommentAdded, onReplyClick }) {
+export default function Comments({ comments = [], postId, highlightCommentId, onCommentAdded }) {
     const navigate = useNavigate();
     const [visibleCount, setVisibleCount] = useState(2);
     const [showAllReplies, setShowAllReplies] = useState(false);
@@ -15,6 +16,7 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
     const [replyExpandState, setReplyExpandState] = useState({});
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [commentToDelete, setCommentToDelete] = useState(null);
+    const [replyingToId, setReplyingToId] = useState(null); // Track which comment is being replied to
 
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const BASE_URL = import.meta.env.VITE_API_URL;
@@ -190,6 +192,8 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
         const isAdmin = currentUser.role === "admin" || currentUser.role === "superadmin";
         const canDelete = isOwner || isAdmin;
 
+        const isReplying = replyingToId === comment._id;
+
         return (
             <div
                 key={comment._id}
@@ -203,11 +207,18 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
                     <div className="absolute -left-8 -top-10 bottom-1/2 w-8 border-l-2 border-b-2 border-dashed border-gray-300 rounded-bl-2xl h-[calc(50%+20px)]"></div>
                 )}
 
-                <div id={comment._id} className="bg-gray-100 rounded-2xl p-4 flex gap-3 items-start relative z-10 group">
+                <div id={comment._id} className="bg-gray-100 rounded-2xl p-4 flex gap-3 items-start relative z-10 group transition-all">
                     {/* Avatar */}
                     <div
                         className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0 overflow-hidden cursor-pointer"
-                        onClick={() => navigate(`/profile/${comment.user?._id}`)}
+                        onClick={() => {
+                            const userId = comment.user?._id || comment.user;
+                            if (userId === currentUser._id) {
+                                navigate("/profile");
+                            } else {
+                                navigate(`/profile/${userId}`);
+                            }
+                        }}
                     >
                         {userProfilePic ? (
                             <img
@@ -225,7 +236,14 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
                         <div className="flex justify-between items-start">
                             <p
                                 className="font-bold text-gray-900 cursor-pointer hover:underline max-md:text-[12px]"
-                                onClick={() => navigate(`/profile/${comment.user?._id}`)}
+                                onClick={() => {
+                                    const userId = comment.user?._id || comment.user;
+                                    if (userId === currentUser._id) {
+                                        navigate("/profile");
+                                    } else {
+                                        navigate(`/profile/${userId}`);
+                                    }
+                                }}
                             >
                                 {userName}
                             </p>
@@ -263,12 +281,28 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
                         <div className="flex gap-4 mt-3 text-xs max-md:text-[10px] text-gray-500 font-medium">
                             <span>{timeAgo(comment.createdAt)}</span>
                             <button
-                                onClick={() => onReplyClick && onReplyClick(comment)}
-                                className="text-gray-600 hover:text-blue-600 cursor-pointer"
+                                onClick={() => setReplyingToId(isReplying ? null : comment._id)}
+                                className={`cursor-pointer ${isReplying ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"}`}
                             >
-                                Reply
+                                {isReplying ? "Cancel" : "Reply"}
                             </button>
                         </div>
+
+                        {/* Inline Reply Box */}
+                        {isReplying && (
+                            <div className="mt-3 animate-fadeIn">
+                                <InlineCommentBox
+                                    postId={postId}
+                                    parentCommentId={comment._id}
+                                    placeholder="Write a reply..."
+                                    buttonText="Post Reply"
+                                    initialFocus={true}
+                                    onClose={() => setReplyingToId(null)}
+                                    onCommentAdded={onCommentAdded}
+                                />
+                            </div>
+                        )}
+
                     </div>
                 </div>
 
