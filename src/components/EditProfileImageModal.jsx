@@ -35,6 +35,7 @@ export default function EditProfileImageModal({ open, onClose, onUpload }) {
       setIsSaving(true);
       try {
         await onUpload(file);
+        toast.success("Profile picture updated successfully!", { position: "top-center" });
         onClose(); // Close modal after successful upload
       } catch (err) {
         console.error("Upload failed", err);

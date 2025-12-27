@@ -17,7 +17,7 @@ export default function Home() {
 
     // Selected categories
     const [selectedCategories, setSelectedCategories] = useState([]);
-    const [sortBy, setSortBy] = useState("recent");
+    const [sortBy, setSortBy] = useState("random");
     const { searchQuery } = useSearch();
 
     // Pagination State
@@ -73,7 +73,7 @@ export default function Home() {
         }
 
         setFilteredPosts(result);
-        setFiltersApplied(selectedCategories.length > 0 || !!searchQuery || sortBy !== "recent");
+        setFiltersApplied(selectedCategories.length > 0 || !!searchQuery || sortBy !== "random");
     };
 
     const categories = [
@@ -226,7 +226,7 @@ export default function Home() {
                                 className="px-5 py-2 rounded-full border hover:bg-gray-100 cursor-pointer text-sm font-medium"
                                 onClick={() => {
                                     setSelectedCategories([]);
-                                    setSortBy("recent");
+                                    setSortBy("random");
                                 }}
                             >
                                 Reset Filters
