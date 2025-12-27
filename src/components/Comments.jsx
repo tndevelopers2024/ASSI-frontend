@@ -1,6 +1,7 @@
 import { deleteComment } from "../api/postApi";
 import { X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import ConfirmationModal from "./ConfirmationModal";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -160,15 +161,17 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
     const confirmDelete = async () => {
         if (!commentToDelete) return;
 
-        // RETURN so ConfirmationModal can show toast correctly
-        return deleteComment(commentToDelete)
-            .then(() => {
-                if (onCommentAdded) onCommentAdded(); // Refresh comments
-            })
-            .finally(() => {
-                setDeleteModalOpen(false);
-                setCommentToDelete(null);
-            });
+        try {
+            await deleteComment(commentToDelete);
+            toast.success("Comment deleted successfully!", { position: "top-center" });
+            if (onCommentAdded) onCommentAdded(); // Refresh comments
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete comment!", { position: "top-center" });
+        } finally {
+            setDeleteModalOpen(false);
+            setCommentToDelete(null);
+        }
     };
 
 
@@ -189,8 +192,9 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
 
         // Allow nested replies up to depth 3
         const replies = depth < 3 ? getReplies(comment._id) : [];
-        const isOwner = currentUser._id === comment.user?._id || currentUser._id === comment.user;
-        const isAdmin = currentUser.role === "admin" || currentUser.role === "superadmin";
+        const isOwner = currentUser._id === (comment.user?._id || comment.user);
+        const userRole = currentUser.role?.toLowerCase();
+        const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "super_admin" || userRole === "super admin";
         const canDelete = isOwner || isAdmin;
 
         const isReplying = replyingToId === comment._id;

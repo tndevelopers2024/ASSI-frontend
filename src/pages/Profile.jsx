@@ -82,21 +82,21 @@ export default function Profile({ onEditImage }) {
         try {
             setLoading(true);
             const res = await API.get("/posts");
-            console.log("All posts:", res.data);
+            // console.log("All posts:", res.data);
 
             // Filter posts by logged-in user
             const userId = user?._id || JSON.parse(localStorage.getItem("user"))?._id;
-            console.log("Current user ID:", userId);
+            // console.log("Current user ID:", userId);
 
             if (userId) {
                 const userPosts = res.data.filter(post => post.user?._id === userId);
-                console.log("User's posts:", userPosts);
+                // console.log("User's posts:", userPosts);
                 setPosts(userPosts);
             } else {
                 setPosts([]);
             }
         } catch (error) {
-            console.error("Error loading posts:", error);
+            // console.error("Error loading posts:", error);
             setPosts([]);
         } finally {
             setLoading(false);
@@ -244,6 +244,7 @@ export default function Profile({ onEditImage }) {
                                         setEditingPost(postToEdit);
                                         setOpenUploadModal(true);
                                     }}
+                                    onDelete={() => loadUserPosts()}
                                 />
                             ))
                         )}
@@ -308,6 +309,7 @@ export default function Profile({ onEditImage }) {
                                         setEditingPost(postToEdit);
                                         setOpenUploadModal(true);
                                     }}
+                                    onDelete={() => loadSavedPosts()}
                                 />
                             ))
                         )}

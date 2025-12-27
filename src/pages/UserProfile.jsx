@@ -23,17 +23,17 @@ export default function UserProfile() {
 
       // Fetch user details
       const userRes = await API.get(`/users/${id}`);
-      console.log("User Data:", userRes.data);
+      // console.log("User Data:", userRes.data);
       setUser(userRes.data);
 
       // Fetch all posts and filter by user
       const postRes = await API.get("/posts");
-      console.log("All Posts:", postRes.data);
+      // console.log("All Posts:", postRes.data);
 
       const userPosts = postRes.data.filter(post =>
         post.user?._id === id || post.user === id
       );
-      console.log("User Posts (Filtered):", userPosts);
+      // console.log("User Posts (Filtered):", userPosts);
       setPosts(userPosts);
 
     } catch (err) {

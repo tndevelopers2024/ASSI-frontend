@@ -1,5 +1,4 @@
 import { AlertTriangle, X } from "lucide-react";
-import toast from "react-hot-toast";
 
 export default function ConfirmationModal({
     isOpen,
@@ -12,23 +11,6 @@ export default function ConfirmationModal({
     isDanger = true
 }) {
     if (!isOpen) return null;
-
-    const handleConfirm = async () => {
-        try {
-            const result = await onConfirm();   // get response from caller
-
-            toast.success("Deleted successfully!", {
-                duration: 2500,
-            });
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to delete!", {
-                duration: 2500,
-            });
-        }
-
-        onClose();
-    };
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] animate-fadeIn">
@@ -68,38 +50,14 @@ export default function ConfirmationModal({
                         onClick={async () => {
                             try {
                                 await onConfirm();
-
-                                // 🔥 SUCCESS TOAST HERE
-                                toast.success("Deleted successfully!", {
-                                    position: "top-center",
-                                    style: {
-                                        background: "#111",
-                                        color: "#fff",
-                                        borderRadius: "10px",
-                                        padding: "10px 16px",
-                                        fontWeight: "600",
-                                    },
-                                });
-
                             } catch (err) {
-                                // ❌ ERROR TOAST HERE
-                                toast.error("Failed to delete!", {
-                                    position: "top-center",
-                                    style: {
-                                        background: "#dc2626",
-                                        color: "#fff",
-                                        borderRadius: "10px",
-                                        padding: "10px 16px",
-                                        fontWeight: "600",
-                                    },
-                                });
+                                // Error handled by caller
                             }
-
                             onClose();
                         }}
                         className={`flex-1 px-4 py-2.5 rounded-full text-white font-medium shadow-lg transition transform active:scale-95 cursor-pointer ${isDanger
-                                ? "bg-red-600 hover:bg-red-700 shadow-red-200"
-                                : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+                            ? "bg-red-600 hover:bg-red-700 shadow-red-200"
+                            : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
                             }`}
                     >
                         {confirmText}

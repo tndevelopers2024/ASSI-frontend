@@ -34,7 +34,12 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
 
     // Get current logged-in user
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-    const isOwner = currentUser._id === data.user?._id;
+    const isOwner = currentUser._id === (data.user?._id || data.user);
+    const userRole = currentUser.role?.toLowerCase();
+    const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "super_admin" || userRole === "super admin";
+
+    // Debug role if needed
+    // console.log(`User: ${currentUser.fullname}, Role: ${currentUser.role}, isOwner: ${isOwner}, isAdmin: ${isAdmin}`);
 
     // Initialize isSaved & isLiked state
     useEffect(() => {
@@ -251,7 +256,7 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
 
 
                     {/* 3-dot Menu - Show for post owner OR admin */}
-                    {(isOwner || currentUser.role === "admin" || currentUser.role === "superadmin") && (
+                    {(isOwner || isAdmin) && (
                         <div className="relative" ref={menuRef}>
                             {/* Trigger Button */}
                             <MoreVertical

@@ -21,8 +21,8 @@ export default function SavedCases() {
     return (
         <div className="min-h-screen">
             <div className="rounded-full bg-white px-4 py-2 w-fit mb-4 ml-4">
-                        <h2 className="text-sm font-semibold">Saved Cases</h2>
-                    </div>
+                <h2 className="text-sm font-semibold">Saved Cases</h2>
+            </div>
 
             {savedCases.length === 0 ? (
                 <div className="bg-white p-10 rounded-xl shadow text-center">
@@ -42,7 +42,7 @@ export default function SavedCases() {
             ) : (
                 <div className="space-y-5">
                     {savedCases.map((caseData) => (
-                        <CaseCard key={caseData._id} data={caseData} />
+                        <CaseCard key={caseData._id} data={caseData} onDelete={() => loadSavedPosts()} />
                     ))}
                 </div>
             )}

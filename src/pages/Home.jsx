@@ -134,6 +134,7 @@ export default function Home() {
                                             setEditingPost(postToEdit);
                                             setUploadModalOpen(true);
                                         }}
+                                        onDelete={() => filterPosts()}
                                     />
                                 </div>
                             );
@@ -170,8 +171,8 @@ export default function Home() {
                             <button
                                 onClick={() => setSortBy("recent")}
                                 className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${sortBy === "recent"
-                                        ? "bg-blue-600 text-white shadow-md transform scale-105"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    ? "bg-blue-600 text-white shadow-md transform scale-105"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                     }`}
                             >
                                 Recent
@@ -179,8 +180,8 @@ export default function Home() {
                             <button
                                 onClick={() => setSortBy("popular")}
                                 className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${sortBy === "popular"
-                                        ? "bg-blue-600 text-white shadow-md transform scale-105"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    ? "bg-blue-600 text-white shadow-md transform scale-105"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                     }`}
                             >
                                 Popular
@@ -188,8 +189,8 @@ export default function Home() {
                             <button
                                 onClick={() => setSortBy("random")}
                                 className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${sortBy === "random"
-                                        ? "bg-blue-600 text-white shadow-md transform scale-105"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    ? "bg-blue-600 text-white shadow-md transform scale-105"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                     }`}
                             >
                                 Random
