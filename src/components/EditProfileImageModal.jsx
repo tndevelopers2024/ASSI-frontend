@@ -7,6 +7,7 @@ export default function EditProfileImageModal({ open, onClose, onUpload }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!open) return null;
 
@@ -29,8 +30,19 @@ export default function EditProfileImageModal({ open, onClose, onUpload }) {
     }
   };
 
-  const handleUpload = () => {
-    if (file) onUpload(file);
+  const handleUpload = async () => {
+    if (file) {
+      setIsSaving(true);
+      try {
+        await onUpload(file);
+        onClose(); // Close modal after successful upload
+      } catch (err) {
+        console.error("Upload failed", err);
+        toast.error("Failed to save profile picture.");
+      } finally {
+        setIsSaving(false);
+      }
+    }
   };
 
   return (
@@ -39,10 +51,11 @@ export default function EditProfileImageModal({ open, onClose, onUpload }) {
 
         {/* Close Button */}
         <button
-          className="absolute right-4 top-4 text-gray-500 hover:text-gray-700 transition cursor-pointer"
+          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition cursor-pointer disabled:opacity-30"
           onClick={onClose}
+          disabled={isSaving}
         >
-          <X size={22} />
+          <X size={20} />
         </button>
 
         <h2 className="text-xl font-semibold mb-5">Edit Profile Picture</h2>
@@ -76,17 +89,18 @@ export default function EditProfileImageModal({ open, onClose, onUpload }) {
         <div className="flex justify-end gap-3 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition cursor-pointer"
+            disabled={isSaving}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition cursor-pointer disabled:opacity-50"
           >
             Cancel
           </button>
 
           <button
             onClick={handleUpload}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300 cursor-pointer"
-            disabled={!file || isCompressing}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300 cursor-pointer flex items-center gap-2"
+            disabled={!file || isCompressing || isSaving}
           >
-            {isCompressing ? "Processing..." : "Save"}
+            {isSaving ? "Saving..." : isCompressing ? "Processing..." : "Save"}
           </button>
         </div>
       </div>
