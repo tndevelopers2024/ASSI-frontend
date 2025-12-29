@@ -358,7 +358,7 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                 {/* COMMENT BOX AND SAVE BUTTON */}
                 <div className="mt-4 flex items-start gap-3">
                     <div className="flex items-center gap-1 mt-1.5 ">
-                        <button
+                        {/* <button
                             onClick={handleLike}
                             className={`group flex items-center gap-1.5 transition-all px-3 py-3 cursor-pointer rounded-full ${isLiked ? "bg-red-50 text-red-600" : "bg-gray-50 text-gray-600 hover:bg-gray-100"}`}
                             title={isLiked ? "Unlike" : "Like"}
@@ -370,7 +370,7 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                             {likesCount > 0 && (
                                 <span className="text-sm font-medium">{likesCount}</span>
                             )}
-                        </button>
+                        </button> */}
 
                         <div
                             className="flex items-center gap-1.5 bg-gray-50 text-gray-600 px-3 py-3 rounded-full"

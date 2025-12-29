@@ -41,7 +41,7 @@ export default function RightSidebar() {
 
       {/* Recent Posts */}
       <div className="mb-8 min-w-[350px] ">
-        <h2 className="font-semibold mb-3 text-[#2563eb]">Recent Posts</h2>
+        <h2 className="font-semibold mb-3 text-[#2563eb]">Recent Cases</h2>
 
         {loading ? (
           <div className="space-y-4">
@@ -118,10 +118,10 @@ export default function RightSidebar() {
                   <p className="font-semibold text-sm text-gray-900 leading-tight mb-2 break-words line-clamp-2">{post.title}</p>
 
                   <div className="flex items-center gap-4 text-gray-400">
-                    <div className="flex items-center gap-1">
+                    {/* <div className="flex items-center gap-1">
                       <Heart size={14} className={(post.likesCount > 0 || post.likes?.length > 0) ? "fill-red-500 text-red-500" : ""} />
                       <span className="text-xs font-medium">{post.likesCount ?? post.likes?.length ?? 0}</span>
-                    </div>
+                    </div> */}
                     <div className="flex items-center gap-1">
                       <MessageCircle size={14} />
                       <span className="text-xs font-medium">

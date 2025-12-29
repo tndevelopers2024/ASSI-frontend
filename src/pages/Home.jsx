@@ -94,7 +94,9 @@ export default function Home() {
                 {/* 🔥 Top Header Row */}
                 <div className="flex items-center justify-between mb-5 max-md:px-4">
                     <div className="rounded-full bg-white px-4 py-2">
-                        <h2 className="text-sm font-semibold">Recent Cases</h2>
+                        <h2 className="text-sm font-semibold">
+                            {sortBy === "recent" ? "Recent Cases" : sortBy === "popular" ? "Popular Cases" : "Random Cases"}
+                        </h2>
                     </div>
 
                     {/* FILTER BUTTON */}
