@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import "./index.css";
 
 import App from "./App.jsx";
@@ -13,12 +14,18 @@ import Login from "./pages/Login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import PostDetails from "./pages/PostDetails.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
+    <Toaster />
     <BrowserRouter>
       <Routes>
         {/* Public route - Login */}
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Protected routes - require authentication */}
         <Route element={<ProtectedRoute />}>

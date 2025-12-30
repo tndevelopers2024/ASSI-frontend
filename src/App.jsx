@@ -7,7 +7,6 @@ import { SearchProvider } from "./context/SearchContext";
 import { ModalProvider } from "./context/ModalContext";
 import { PostProvider } from "./context/PostContext";
 import ScrollToTop from "./components/ScrollToTop";
-import { Toaster } from "react-hot-toast";
 
 
 export default function App() {
@@ -15,7 +14,7 @@ export default function App() {
     <SearchProvider>
       <ModalProvider>
         <PostProvider>
-          <Toaster />
+
 
           <div className="app-grid h-screen w-full overflow-hidden">
             <ScrollToTop />
