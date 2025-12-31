@@ -78,9 +78,11 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
   }, [initialData, open]);
 
 
-  // IMAGE UPLOAD
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
+  // IMAGE UPLOAD HANDLERS
+  const [isDragging, setIsDragging] = useState(false);
+
+  const processFiles = async (fileList) => {
+    const files = Array.from(fileList);
 
     if (combinedImages.length + files.length > 10) {
       toast.error("You can only upload up to 10 images.");
@@ -100,6 +102,32 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
       console.error("Compression failed", err);
       setNewImages((prev) => [...prev, ...files]); // fallback to original
       if (compressionToast) toast.error("Some images failed to compress, using originals.", { id: compressionToast });
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    if (e.target.files) {
+      processFiles(e.target.files);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(e.dataTransfer.files);
+      e.dataTransfer.clearData();
     }
   };
 
@@ -322,7 +350,14 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
             Upload your image
           </p>
 
-          <label className="w-full h-32 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center rounded-xl cursor-pointer hover:bg-gray-50 transition mb-4">
+          <label
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`w-full h-32 border-2 border-dashed flex flex-col items-center justify-center rounded-xl cursor-pointer transition mb-4
+            ${isDragging ? "bg-blue-50 border-blue-500" : "border-gray-300 hover:bg-gray-50"}
+            `}
+          >
             <UploadCloud size={32} className="text-gray-500 mb-2" />
             <p className="text-gray-500 text-sm">Drag and Drop or upload media</p>
 
