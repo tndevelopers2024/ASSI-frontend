@@ -5,7 +5,7 @@ import API from "../api/api";
 import logo from "/images/assi_logo.png";
 
 export default function Login() {
-    const [email, setEmail] = useState("");
+    const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
@@ -21,7 +21,7 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const res = await API.post("/users/login", { email, password });
+            const res = await API.post("/users/login", { email: identifier, password });
 
             localStorage.setItem("token", res.data.token);
             localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -65,13 +65,13 @@ export default function Login() {
 
                 <form onSubmit={handleLogin} className="space-y-5">
                     <div>
-                        <label className="text-gray-700 text-sm font-medium">Email</label>
+                        <label className="text-gray-700 text-sm font-medium">Email or User ID</label>
                         <input
-                            type="email"
+                            type="text"
                             className="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter email or user ID"
+                            value={identifier}
+                            onChange={(e) => setIdentifier(e.target.value)}
                             disabled={loading}
                             required
                         />
