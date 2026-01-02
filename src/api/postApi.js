@@ -5,7 +5,13 @@ export const createPost = async (postData, images) => {
     formData.append("title", postData.title);
 
     formData.append("content", postData.content);
-    formData.append("category", postData.category);
+
+    // Handle category as array or string
+    if (Array.isArray(postData.category)) {
+        postData.category.forEach(cat => formData.append("category", cat));
+    } else {
+        formData.append("category", postData.category);
+    }
 
     images.forEach((img) => {
         formData.append("images", img); // must match multer field
@@ -61,7 +67,13 @@ export const updatePost = async (id, postData, images, existingImages) => {
 
     formData.append("title", postData.title);
     formData.append("content", postData.content);
-    formData.append("category", postData.category);
+
+    // Handle category as array or string
+    if (Array.isArray(postData.category)) {
+        postData.category.forEach(cat => formData.append("category", cat));
+    } else {
+        formData.append("category", postData.category);
+    }
 
     // New images
     if (images && images.length > 0) {

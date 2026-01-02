@@ -45,8 +45,17 @@ export default function Home() {
         let result = [...posts];
 
         // 1. Filter by Category
+        // 1. Filter by Category
         if (selectedCategories.length > 0) {
-            result = result.filter(post => selectedCategories.includes(post.category));
+            result = result.filter(post => {
+                if (Array.isArray(post.category)) {
+                    // Check if ANY of the post's tags are in the selected categories
+                    return post.category.some(cat => selectedCategories.includes(cat));
+                } else {
+                    // Legacy string support
+                    return selectedCategories.includes(post.category);
+                }
+            });
         }
 
         // 2. Filter by Search Query
@@ -77,13 +86,25 @@ export default function Home() {
     };
 
     const categories = [
-        "General",
-        "Education",
-        "Coding",
-        "Design",
-        "News",
-        "Technology",
-        "Entertainment",
+        "Diagnostic Dilemma",
+        "Cranioverterbal",
+        "Cervical",
+        "Thoracic",
+        "Lumbar",
+        "Sacral",
+        "Degenerative",
+        "Trauma",
+        "Tumours",
+        "Metastasis",
+        "Infections",
+        "Tuberculosis",
+        "Adult deformity",
+        "Pediatric Deformity",
+        "Osteoporosis",
+        "Inflammatory",
+        "Metabolic",
+        "Complications",
+        "Minimally invasive surgery",
         "Other",
     ];
 
@@ -153,7 +174,7 @@ export default function Home() {
             </div>
             {filterOpen && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 h-full">
-                    <div className="bg-white w-[450px] rounded-2xl shadow-xl p-6 relative animate-fadeIn">
+                    <div className="bg-white max-w-[450px] md:max-w-[600px] w-full rounded-2xl shadow-xl p-6 relative animate-fadeIn">
 
                         {/* Close Button */}
                         <button

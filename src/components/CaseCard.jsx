@@ -244,7 +244,11 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                                 <span className="text-gray-500">•</span>
                                 <span className="text-gray-500">{timeAgo(data.createdAt)}</span>
                                 <span className="text-gray-500">•</span>
-                                <span className="text-gray-700">{data.category}</span>
+                                <span className="text-gray-700">
+                                    {Array.isArray(data.category)
+                                        ? data.category.join(", ")
+                                        : data.category}
+                                </span>
                             </div>
 
                             {/* Line 2 → ASSI ID */}

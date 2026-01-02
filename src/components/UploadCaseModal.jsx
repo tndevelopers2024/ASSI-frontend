@@ -26,7 +26,7 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
   const socket = getSocket();
   const [title, setTitle] = useState("");
   const [caseText, setCaseText] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState([]);
   const [newImages, setNewImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [isPosting, setIsPosting] = useState(false);
@@ -65,13 +65,17 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
     if (initialData) {
       setTitle(initialData.title || "");
       setCaseText(initialData.content || "");
-      setCategory(initialData.category || "");
+      // Handle category coming as string or array
+      const initialCats = initialData.category
+        ? (Array.isArray(initialData.category) ? initialData.category : [initialData.category])
+        : [];
+      setCategory(initialCats);
       setExistingImages(initialData.images || []);
       setNewImages([]);
     } else {
       setTitle("");
       setCaseText("");
-      setCategory("");
+      setCategory([]);
       setExistingImages([]);
       setNewImages([]);
     }
@@ -146,7 +150,7 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
     const newErrors = {
       title: title ? "" : "Title is required",
       caseText: caseText ? "" : "Case description is required",
-      category: category ? "" : "Tag is required",
+      category: category && category.length > 0 ? "" : "At least one tag is required",
     };
 
     setErrors(newErrors);
@@ -291,9 +295,26 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
       ${errors.category ? "border-red-500" : "border-gray-300"}
     `}
               >
-                <span className={`${category ? "text-gray-700" : "text-gray-400"}`}>
-                  {category || "Select Tag *"}
-                </span>
+                <div className="flex flex-wrap gap-2">
+                  {category && Array.isArray(category) && category.length > 0 ? (
+                    category.map((tag) => (
+                      <span key={tag} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+                        {tag}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCategory((prev) => prev.filter((t) => t !== tag));
+                          }}
+                          className="hover:text-blue-900 cursor-pointer"
+                        >
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-400">Select Tags *</span>
+                  )}
+                </div>
                 <span className="text-gray-500"><ChevronDown size={22} /></span>
               </div>
 
@@ -305,38 +326,58 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
               {/* Dropdown List */}
               {dropdownOpen && (
                 <div
-                  className="absolute w-full mt-2 bg-white shadow-xl rounded-xl border border-gray-200 py-2 z-20 animate-fadeIn"
+                  className="absolute w-full mt-2 bg-white shadow-xl rounded-xl border border-gray-200 py-2 z-20 animate-fadeIn max-h-60 overflow-y-auto"
                 >
                   <p className="px-4 py-2 text-sm font-semibold text-gray-700">
                     Tags
                   </p>
 
-                  {[
-                    "General",
-                    "Education",
-                    "Coding",
-                    "Design",
-                    "News",
-                    "Technology",
-                    "Entertainment",
-                    "Other",
-                  ].map((item) => (
-                    <div
-                      key={item}
-                      onClick={() => {
-                        setCategory(item);
-                        setErrors((prev) => ({ ...prev, category: "" }));
-                        setDropdownOpen(false);
-                      }}
-                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-gray-700"
-                    >
-                      {item}
-                    </div>
-                  ))}
-
-                  {/* Disabled item style */}
-                  <div className="px-4 py-2 text-gray-400 cursor-not-allowed">
-                    More coming soon
+                  <div className="grid grid-cols-2 gap-2 px-4 pb-2">
+                    {[
+                      "Diagnostic Dilemma",
+                      "Cranioverterbal",
+                      "Cervical",
+                      "Thoracic",
+                      "Lumbar",
+                      "Sacral",
+                      "Degenerative",
+                      "Trauma",
+                      "Tumours",
+                      "Metastasis",
+                      "Infections",
+                      "Tuberculosis",
+                      "Adult deformity",
+                      "Pediatric Deformity",
+                      "Osteoporosis",
+                      "Inflammatory",
+                      "Metabolic",
+                      "Complications",
+                      "Minimally invasive surgery",
+                      "Other",
+                    ].map((item) => {
+                      const isSelected = Array.isArray(category) && category.includes(item);
+                      return (
+                        <label
+                          key={item}
+                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {
+                              if (isSelected) {
+                                setCategory((prev) => prev.filter((t) => t !== item));
+                              } else {
+                                setCategory((prev) => [...(Array.isArray(prev) ? prev : []), item]);
+                                setErrors((prev) => ({ ...prev, category: "" }));
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                          />
+                          <span className="text-sm text-gray-700">{item}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
               )}
