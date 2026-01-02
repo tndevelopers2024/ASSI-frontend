@@ -104,7 +104,13 @@ export default function RightSidebar() {
                       <span className="text-gray-400">•</span>
                       <span className="text-gray-500">{timeAgo(post.createdAt)}</span>
                       <span className="text-gray-400">•</span>
-                      <span className="text-gray-600">{post.category}</span>
+                      <span className="text-gray-600">
+                        {Array.isArray(post.category)
+                          ? (post.category.length > 1
+                            ? `${post.category[0]} +${post.category.length - 1}`
+                            : post.category[0])
+                          : post.category}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-xs text-gray-400 flex-1">ASSI ID: {post.user?.user_id || "N/A"}</span>

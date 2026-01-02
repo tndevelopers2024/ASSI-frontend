@@ -224,7 +224,7 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                         {/* Name + time + tag + ID */}
                         <div className="flex flex-col">
 
-                            {/* Line 1 → Name • 1 hr ago • Category */}
+                            {/* Line 1 → Name • 1 hr ago */}
                             <div className="flex items-center gap-2 text-sm">
 
                                 <span
@@ -243,18 +243,38 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
 
                                 <span className="text-gray-500">•</span>
                                 <span className="text-gray-500">{timeAgo(data.createdAt)}</span>
-                                <span className="text-gray-500">•</span>
-                                <span className="text-gray-700">
-                                    {Array.isArray(data.category)
-                                        ? data.category.join(", ")
-                                        : data.category}
-                                </span>
                             </div>
 
-                            {/* Line 2 → ASSI ID */}
+                            {/* Line 2 → Tags */}
+                            
+
+                            {/* Line 3 → ASSI ID */}
                             <span className="text-gray-400 text-xs">
                                 ASSI ID: {data.user.user_id}
                             </span>
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                {Array.isArray(data.category) ? (
+                                    <>
+                                        {data.category.slice(0, 2).map((tag, index) => (
+                                            <span
+                                                key={index}
+                                                className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium"
+                                            >
+                                                {tag}
+                                            </span>
+                                        ))}
+                                        {data.category.length > 2 && (
+                                            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium">
+                                                +{data.category.length - 2} more
+                                            </span>
+                                        )}
+                                    </>
+                                ) : (
+                                    <span className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                                        {data.category}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
 
