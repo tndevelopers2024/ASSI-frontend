@@ -3,7 +3,8 @@ import ImageGrid from "./ImageGrid";
 import Comments from "./Comments";
 import CommentModal from "./CommentModal";
 import ConfirmationModal from "./ConfirmationModal";
-import { MoreVertical, Trash2, Edit, Bookmark, Heart, MessageSquare } from "lucide-react";
+import { MoreVertical, Trash2, Edit, Bookmark, Heart, MessageSquare, Share2 } from "lucide-react";
+import ShareModal from "./ShareModal";
 import API from "../api/api";
 import { getComments, deletePost, toggleSavePost, toggleLikePost } from "../api/postApi";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -29,6 +30,7 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
     const [isSaved, setIsSaved] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [likesCount, setLikesCount] = useState(0);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const menuRef = useRef(null);
     const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -156,6 +158,12 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
     };
     const handleEdit = () => { if (onUpdate) onUpdate(data); setShowMenu(false); };
 
+    const handleShare = () => {
+        setIsShareModalOpen(true);
+    };
+
+    const postUrl = `${window.location.origin}/post/${data._id}`;
+
     // timeAgo function ... (omitted for brevity in replacement block, assuming it is preserved or needs to be re-inserted if I am replacing the whole block. 
     // Wait, replace_file_content replaces a block. I need to be careful not to delete timeAgo if I don't include it. 
     // The instructions say "ReplacementContent" must be complete drop-in. 
@@ -246,7 +254,7 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                             </div>
 
                             {/* Line 2 → Tags */}
-                            
+
 
                             {/* Line 3 → ASSI ID */}
                             <span className="text-gray-400 text-xs">
@@ -416,7 +424,14 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                         />
                     </div>
 
-                    {/* Save Button */}
+                    <button
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition cursor-pointer flex-shrink-0 mt-1 bg-gray-100 text-gray-600 hover:bg-gray-200`}
+                        onClick={handleShare}
+                        title="Share Post"
+                    >
+                        <Share2 size={20} />
+                    </button>
+
                     <button
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition cursor-pointer flex-shrink-0 mt-1 ${isSaved ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
                         onClick={handleSave}
@@ -425,6 +440,14 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                         <Bookmark size={20} className={isSaved ? "fill-current" : ""} />
                     </button>
                 </div>
+
+                {/* SHARE MODAL */}
+                <ShareModal
+                    isOpen={isShareModalOpen}
+                    onClose={() => setIsShareModalOpen(false)}
+                    postUrl={postUrl}
+                    postTitle={data.title}
+                />
 
                 {/* COMMENTS LIST */}
                 <Comments

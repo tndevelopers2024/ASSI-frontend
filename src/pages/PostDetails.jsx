@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import API from "../api/api";
 import CaseCard from "../components/CaseCard";
 import UploadCaseModal from "../components/UploadCaseModal";
+import { Helmet } from "react-helmet-async";
 
 export default function PostDetails() {
   const { postId } = useParams();
@@ -33,6 +34,16 @@ export default function PostDetails() {
 
   return (
     <div className="p-6">
+      <Helmet>
+        <title>{post.title} | ASSI</title>
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.content?.substring(0, 150) + "..."} />
+        <meta property="og:image" content={post.images?.[0] ? `${import.meta.env.VITE_API_URL}/${post.images[0]}` : "/logo.png"} />
+        <meta property="og:url" content={window.location.href} />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.content?.substring(0, 150) + "..."} />
+        <meta name="twitter:image" content={post.images?.[0] ? `${import.meta.env.VITE_API_URL}/${post.images[0]}` : "/logo.png"} />
+      </Helmet>
       <CaseCard
         data={post}
         highlightCommentId={highlightCommentId}

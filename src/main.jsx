@@ -17,29 +17,33 @@ import PostDetails from "./pages/PostDetails.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 
+import { HelmetProvider } from "react-helmet-async";
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Toaster />
-    <BrowserRouter>
-      <Routes>
-        {/* Public route - Login */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+    <HelmetProvider>
+      <Toaster />
+      <BrowserRouter>
+        <Routes>
+          {/* Public route - Login */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Protected routes - require authentication */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<App />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/:id" element={<UserProfile />} />
-            <Route path="/saved" element={<SavedCases />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/post/:postId" element={<PostDetails />} />
+          {/* Protected routes - require authentication */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<App />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/:id" element={<UserProfile />} />
+              <Route path="/saved" element={<SavedCases />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/post/:postId" element={<PostDetails />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </HelmetProvider>
   </StrictMode>
 );
