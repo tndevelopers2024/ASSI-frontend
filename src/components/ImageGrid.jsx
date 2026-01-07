@@ -21,11 +21,11 @@ export default function ImageGrid({ images = [], postContent = "" }) {
             <>
                 <div className="flex justify-center">
                     <img
-                    src={images[0]}
-                    alt="single"
-                    onClick={() => handleClick(0)}
-                    className="w-[400px] h-auto rounded-xl mt-3 cursor-pointer object-cover"
-                />
+                        src={images[0]}
+                        alt="single"
+                        onClick={() => handleClick(0)}
+                        className="w-[400px] h-auto rounded-xl mt-3 cursor-pointer object-cover"
+                    />
                 </div>
 
                 {/* POPUP */}
@@ -135,6 +135,7 @@ export default function ImageGrid({ images = [], postContent = "" }) {
 // -------------------------
 function Popup({ images, initialIndex, content, onClose }) {
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
+    const [touchStart, setTouchStart] = useState(null);
 
     const nextImage = () => {
         setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -144,54 +145,83 @@ function Popup({ images, initialIndex, content, onClose }) {
         setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
     };
 
+    const handleTouchStart = (e) => {
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const handleTouchEnd = (e) => {
+        if (!touchStart) return;
+        const touchEnd = e.changedTouches[0].clientX;
+        const diff = touchStart - touchEnd;
+
+        // Minimum swipe distance of 50px
+        if (diff > 50) {
+            nextImage();
+        } else if (diff < -50) {
+            prevImage();
+        }
+
+        setTouchStart(null);
+    };
+
     return (
         <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center z-50 p-4"
             onClick={onClose}
         >
+            {/* Main Wrapper */}
             <div
-                className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl"
+                className="relative max-w-4xl w-full flex flex-col items-center gap-6"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Close Button */}
+                {/* Close Button - Positioned top-right relative to container */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 bg-white rounded-full p-2 hover:bg-gray-100 z-10 shadow-lg cursor-pointer"
+                    className="absolute -top-12 right-0 md:-right-4 text-white hover:text-gray-300 transition-colors cursor-pointer"
                 >
-                    <X size={24} />
+                    <X size={32} />
                 </button>
 
-                {/* Image Slider */}
-                <div className="relative bg-gray-900">
-                    <img
-                        src={images[currentIndex]}
-                        className="w-full max-h-[600px] object-contain"
-                        alt={`slide-${currentIndex}`}
-                    />
+                {/* Image Container */}
+                <div
+                    className="relative bg-white rounded-2xl shadow-2xl overflow-visible w-full flex items-center justify-center bg-gray-950"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                >
+                    <div className="w-full overflow-hidden rounded-2xl flex items-center justify-center min-h-[300px]">
+                        <img
+                            src={images[currentIndex]}
+                            className="w-full max-h-[70vh] md:max-h-[600px] object-contain select-none"
+                            alt={`slide-${currentIndex}`}
+                            draggable="false"
+                        />
+                    </div>
 
-                    {/* Navigation Arrows - Only show if more than 1 image */}
+                    {/* Navigation Arrows - Outside on Desktop */}
                     {images.length > 1 && (
                         <>
                             <button
                                 onClick={prevImage}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 rounded-full p-3 hover:bg-white shadow-lg cursor-pointer"
+                                className="hidden md:flex absolute -left-20 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-4 shadow-xl cursor-pointer transition-all hover:scale-110 border border-white/20"
                             >
-                                <ChevronLeft size={28} />
+                                <ChevronLeft size={36} />
                             </button>
                             <button
                                 onClick={nextImage}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 rounded-full p-3 hover:bg-white shadow-lg cursor-pointer"
+                                className="hidden md:flex absolute -right-20 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full p-4 shadow-xl cursor-pointer transition-all hover:scale-110 border border-white/20"
                             >
-                                <ChevronRight size={28} />
+                                <ChevronRight size={36} />
                             </button>
-
-                            {/* Image Counter */}
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-medium">
-                                {currentIndex + 1} / {images.length}
-                            </div>
                         </>
                     )}
                 </div>
+
+                {/* Pagination (Outside/Below the image) */}
+                {images.length > 1 && (
+                    <div className="bg-white/10 backdrop-blur-sm text-white px-5 py-2 rounded-full text-sm font-semibold border border-white/20 shadow-2xl">
+                        {currentIndex + 1} / {images.length}
+                    </div>
+                )}
             </div>
         </div>
     );
