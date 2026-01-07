@@ -21,6 +21,8 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { SortableImage } from "./SortableImage";
+import TermsModal from "./TermsModal";
+
 
 export default function UploadCaseModal({ open, onClose, initialData = null }) {
   const socket = getSocket();
@@ -36,6 +38,8 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
     caseText: "",
     category: "",
   });
+  const [showTerms, setShowTerms] = useState(false);
+
 
 
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -440,8 +444,23 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
             </DndContext>
           )}
 
+          {/* TERMS AND CONDITIONS */}
+          <div className="mt-4 text-center">
+            <p className="text-xs text-gray-500">
+              By posting, you agree to our{" "}
+              <button
+                type="button"
+                onClick={() => setShowTerms(true)}
+                className="text-[#0057FF] hover:underline font-semibold cursor-pointer"
+              >
+                Terms and Conditions
+              </button>
+            </p>
+          </div>
+
           {/* BUTTONS */}
           <div className="flex justify-end gap-3 mt-8 pr-1 pb-2">
+
             <button
               onClick={onClose}
               className="px-6 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition cursor-pointer"
@@ -460,6 +479,9 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
           </div>
         </div>
       </div>
+
+      <TermsModal open={showTerms} onClose={() => setShowTerms(false)} />
     </div>
   );
 }
+
