@@ -15,7 +15,7 @@ import { usePosts } from "../context/PostContext";
 import { renderTextWithLinks } from "../utils/textUtils";
 
 
-export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId }) {
+export default function CaseCard({ data, onDelete, onUpdate, onLike, highlightCommentId }) {
     const socket = getSocket();
     const { refreshPosts, syncPostUpdate } = usePosts();
     if (!data) return null;
@@ -36,7 +36,8 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
 
     // Get current logged-in user
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-    const isOwner = currentUser._id === (data.user?._id || data.user);
+    const currentUserId = currentUser._id || currentUser.id;
+    const isOwner = currentUserId === (data.user?._id || data.user);
     const userRole = currentUser.role?.toLowerCase();
     const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "super_admin" || userRole === "super admin";
 
@@ -51,8 +52,8 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
 
         // Initialize likes from the data prop (which is kept in sync by PostContext)
         setLikesCount(data.likesCount ?? data.likes?.length ?? 0);
-        setIsLiked(data.likes?.some(id => (id._id || id) === currentUser._id) || false);
-    }, [data._id, data.likes, data.likesCount, currentUser._id]);
+        setIsLiked(data.likes?.some(id => (id._id || id) === currentUserId) || false);
+    }, [data._id, data.likes, data.likesCount, currentUserId]);
 
     const handleSave = async () => {
         // Optimistic update
@@ -89,13 +90,30 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
 
         try {
             const res = await toggleLikePost(data._id);
-            // 1. Immediate local update via context
-            syncPostUpdate(data._id, {
-                likes: res.likes,
-                likesCount: res.likes?.length
-            });
-            // 2. Broadcast for others
-            socket.emit("post:liked", res);
+
+            // 1. Calculate updated likes array locally (since backend only returns count/status)
+            let updatedLikes = [...(data.likes || [])];
+            if (res.isLiked) {
+                if (!updatedLikes.some(id => (id._id || id) === currentUserId)) {
+                    updatedLikes.push(currentUserId);
+                }
+            } else {
+                updatedLikes = updatedLikes.filter(id => (id._id || id) !== currentUserId);
+            }
+
+            const updatedData = {
+                likes: updatedLikes,
+                likesCount: res.likesCount
+            };
+
+            // 2. Immediate local update via context
+            syncPostUpdate(data._id, updatedData);
+
+            // 3. Notify parent if needed (e.g. PostDetails)
+            if (onLike) onLike({ ...data, ...updatedData });
+
+            // 4. Broadcast for others
+            socket.emit("post:liked", { ...data, ...updatedData });
         } catch (error) {
             console.error("Error liking post:", error);
             // Revert on error
@@ -415,13 +433,19 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                     </div>
 
                     <div className="flex-1">
-                        <InlineCommentBox
-                            postId={data._id}
-                            onCommentAdded={async () => {
-                                const fetchedComments = await getComments(data._id);
-                                setComments(fetchedComments);
-                            }}
-                        />
+                        {currentUser.membership_category !== "LIFE" ? (
+                            <InlineCommentBox
+                                postId={data._id}
+                                onCommentAdded={async () => {
+                                    const fetchedComments = await getComments(data._id);
+                                    setComments(fetchedComments);
+                                }}
+                            />
+                        ) : (
+                            <div className="bg-gray-50 p-3 rounded-xl text-sm text-gray-500 italic">
+                                LIFE members can only view and like posts.
+                            </div>
+                        )}
                     </div>
 
                     <button
@@ -481,7 +505,11 @@ export default function CaseCard({ data, onDelete, onUpdate, highlightCommentId 
                     images: postImages,
                     comments: comments,
                     title: data.title,
+                    likes: data.likes,
+                    likesCount: likesCount,
+                    isLiked: isLiked
                 }}
+                handleLike={handleLike}
                 replyingTo={replyingToComment}
                 onCommentAdded={async () => {
                     // Refresh comments after adding new one

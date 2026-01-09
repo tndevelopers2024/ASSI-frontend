@@ -1,4 +1,4 @@
-import { X, Upload, SendHorizontal } from "lucide-react";
+import { X, Upload, SendHorizontal, Heart, MessageSquare } from "lucide-react";
 import { useState, useMemo } from "react";
 import {
     DndContext,
@@ -29,12 +29,14 @@ export default function CommentModal({
     data,
     onCommentAdded,
     replyingTo,
+    handleLike
 }) {
     const [uploads, setUploads] = useState([]);
     const [comment, setComment] = useState("");
     const [expanded, setExpanded] = useState(false);
     const [imgError, setImgError] = useState(false);
     const [isPosting, setIsPosting] = useState(false);
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
     const firstLetter = data.user?.fullname?.[0]?.toUpperCase() || "?";
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -203,6 +205,32 @@ export default function CommentModal({
 
                     </div>
 
+                    {/* Like and stats */}
+                    <div className="flex items-center gap-1.5 ">
+                        <button
+                            onClick={handleLike}
+                            className={`group flex items-center gap-1.5 transition-all px-3 py-2 cursor-pointer rounded-full ${data.isLiked ? "bg-red-50 text-red-600" : "bg-gray-50 text-gray-600 hover:bg-gray-100"}`}
+                            title={data.isLiked ? "Unlike" : "Like"}
+                        >
+                            <Heart
+                                size={18}
+                                className={`transition-all ${data.isLiked ? "fill-red-600 text-red-600 scale-110" : "text-gray-500 group-hover:text-red-500"}`}
+                            />
+                            {data.likesCount > 0 && (
+                                <span className="text-sm font-medium">{data.likesCount}</span>
+                            )}
+                        </button>
+
+                        <div
+                            className="flex items-center gap-1.5 bg-gray-50 text-gray-600 px-3 py-2 rounded-full"
+                        >
+                            <MessageSquare size={18} className="text-gray-500" />
+                            <span className="text-sm font-medium">
+                                {data.commentsCount ?? data.commentCount ?? data.comments?.length ?? 0}
+                            </span>
+                        </div>
+                    </div>
+
                 </div>
 
                 {/* Title */}
@@ -258,48 +286,54 @@ export default function CommentModal({
 
 
                 {/* Comment Input Box */}
-                <div className="mt-5 rounded-xl p-3 bg-gray-50">
+                {currentUser.membership_category !== "LIFE" ? (
+                    <div className="mt-5 rounded-xl p-3 bg-gray-50">
 
-                    <textarea
-                        placeholder="Write a Comment..."
-                        rows={2}
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        className="w-full p-3 rounded-lg outline-none resize-none"
-                    ></textarea>
+                        <textarea
+                            placeholder="Write a Comment..."
+                            rows={2}
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            className="w-full p-3 rounded-lg outline-none resize-none"
+                        ></textarea>
 
-                    {errorMessage && (
-                        <p className="text-red-500 mt-2 text-sm">{errorMessage}</p>
-                    )}
+                        {errorMessage && (
+                            <p className="text-red-500 mt-2 text-sm">{errorMessage}</p>
+                        )}
 
-                    <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center justify-between mt-3">
 
-                        {/* Upload Button */}
-                        <label className="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-black">
-                            <Upload size={18} />
-                            <span className="max-md:text-xs">Upload Documents</span>
-                            <input
-                                type="file"
-                                multiple
-                                accept="image/*,.pdf,.doc,.docx"
-                                onChange={handleUpload}
-                                className="hidden"
-                            />
-                        </label>
+                            {/* Upload Button */}
+                            <label className="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-black">
+                                <Upload size={18} />
+                                <span className="max-md:text-xs">Upload Documents</span>
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*,.pdf,.doc,.docx"
+                                    onChange={handleUpload}
+                                    className="hidden"
+                                />
+                            </label>
 
-                        {/* Post Button */}
-                        <button
-                            onClick={handlePostComment}
-                            disabled={isPosting}
-                            className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-full cursor-pointer max-md:px-3 max-md:py-1 max-md:text-xs whitespace-nowrap ${isPosting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
-                        >
-                            {isPosting ? "Posting..." : "Post Comment"}
-                            <SendHorizontal />
-                        </button>
+                            {/* Post Button */}
+                            <button
+                                onClick={handlePostComment}
+                                disabled={isPosting}
+                                className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-full cursor-pointer max-md:px-3 max-md:py-1 max-md:text-xs whitespace-nowrap ${isPosting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
+                            >
+                                {isPosting ? "Posting..." : "Post Comment"}
+                                <SendHorizontal />
+                            </button>
 
 
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="mt-5 p-4 bg-gray-50 rounded-xl text-center text-gray-500 italic text-sm">
+                        LIFE members can only view and like posts.
+                    </div>
+                )}
 
                 {/* Comments List */}
                 <div className="mt-6">

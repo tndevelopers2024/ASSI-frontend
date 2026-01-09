@@ -245,6 +245,9 @@ export default function Profile({ onEditImage }) {
                                         setOpenUploadModal(true);
                                     }}
                                     onDelete={() => loadUserPosts()}
+                                    onLike={(updated) => {
+                                        setPosts(prev => prev.map(p => p._id === updated._id ? updated : p));
+                                    }}
                                 />
                             ))
                         )}
@@ -310,6 +313,9 @@ export default function Profile({ onEditImage }) {
                                         setOpenUploadModal(true);
                                     }}
                                     onDelete={() => loadSavedPosts()}
+                                    onLike={(updated) => {
+                                        setSavedPosts(prev => prev.map(p => p._id === updated._id ? updated : p));
+                                    }}
                                 />
                             ))
                         )}

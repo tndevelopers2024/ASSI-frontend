@@ -134,12 +134,14 @@ export default function Topbar() {
       {/* Right Side */}
       <div className="flex items-center gap-5">
 
-        <button
-          onClick={() => openUploadModal()}
-          className="bg-blue-600 text-white px-5 py-2 rounded-full hidden md:flex text-sm hover:bg-blue-700 cursor-pointer items-center gap-2"
-        >
-          <p>Add Your Case</p> <Plus size={16} />
-        </button>
+        {user?.membership_category !== "LIFE" && (
+          <button
+            onClick={() => openUploadModal()}
+            className="bg-blue-600 text-white px-5 py-2 rounded-full hidden md:flex text-sm hover:bg-blue-700 cursor-pointer items-center gap-2"
+          >
+            <p>Add Your Case</p> <Plus size={16} />
+          </button>
+        )}
 
         <div className="relative cursor-pointer" onClick={() => navigate("/notifications")}>
 

@@ -36,8 +36,11 @@ export default function Home() {
     }, [loading, filteredPosts.length, visibleCount]);
 
     useEffect(() => {
+        setVisibleCount(5); // Reset count only when filter/search/sort criteria change
+    }, [searchQuery, selectedCategories, sortBy]);
+
+    useEffect(() => {
         filterPosts();
-        setVisibleCount(5); // Reset count on filter/search change
     }, [searchQuery, selectedCategories, sortBy, posts]);
 
 
@@ -78,7 +81,8 @@ export default function Home() {
                 return bPop - aPop;
             });
         } else if (sortBy === "random") {
-            result.sort(() => Math.random() - 0.5);
+            // Keep the original order from context (which is already shuffled on load)
+            // No extra sorting needed here to keep it stable
         }
 
         setFilteredPosts(result);

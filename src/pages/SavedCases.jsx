@@ -42,7 +42,14 @@ export default function SavedCases() {
             ) : (
                 <div className="space-y-5">
                     {savedCases.map((caseData) => (
-                        <CaseCard key={caseData._id} data={caseData} onDelete={() => loadSavedPosts()} />
+                        <CaseCard
+                            key={caseData._id}
+                            data={caseData}
+                            onDelete={() => loadSavedPosts()}
+                            onLike={(updated) => {
+                                setSavedCases(prev => prev.map(c => c._id === updated._id ? updated : c));
+                            }}
+                        />
                     ))}
                 </div>
             )}

@@ -151,6 +151,12 @@ export default function UploadCaseModal({ open, onClose, initialData = null }) {
   const handleSubmit = async () => {
     if (isPosting) return;
 
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (currentUser.membership_category === "LIFE") {
+      toast.error("LIFE members can only view and like posts.");
+      return;
+    }
+
     const newErrors = {
       title: title ? "" : "Title is required",
       caseText: caseText ? "" : "Case description is required",

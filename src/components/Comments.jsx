@@ -285,12 +285,14 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
                         {/* Footer: Time & Reply */}
                         <div className="flex gap-4 mt-3 text-xs max-md:text-[10px] text-gray-500 font-medium">
                             <span>{timeAgo(comment.createdAt)}</span>
-                            <button
-                                onClick={() => setReplyingToId(isReplying ? null : comment._id)}
-                                className={`cursor-pointer ${isReplying ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"}`}
-                            >
-                                {isReplying ? "Cancel" : "Reply"}
-                            </button>
+                            {currentUser.membership_category !== "LIFE" && (
+                                <button
+                                    onClick={() => setReplyingToId(isReplying ? null : comment._id)}
+                                    className={`cursor-pointer ${isReplying ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"}`}
+                                >
+                                    {isReplying ? "Cancel" : "Reply"}
+                                </button>
+                            )}
                         </div>
 
                         {/* Inline Reply Box */}

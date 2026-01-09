@@ -111,7 +111,15 @@ export default function UserProfile() {
                 No posts yet.
               </div>
             ) : (
-              posts.map((p) => <CaseCard key={p._id} data={p} />)
+              posts.map((p) => (
+                <CaseCard
+                  key={p._id}
+                  data={p}
+                  onLike={(updated) => {
+                    setPosts(prev => prev.map(post => post._id === updated._id ? updated : post));
+                  }}
+                />
+              ))
             )}
           </div>
         )}

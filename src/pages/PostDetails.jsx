@@ -54,6 +54,9 @@ export default function PostDetails() {
         onDelete={() => {
           navigate("/");
         }}
+        onLike={(updatedPost) => {
+          setPost(updatedPost);
+        }}
       />
 
       {/* Upload/Edit Modal */}
