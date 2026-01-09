@@ -143,34 +143,36 @@ export default function Topbar() {
           </button>
         )}
 
-        <div className="relative cursor-pointer" onClick={() => navigate("/notifications")}>
+        {user?.membership_category !== "LIFE" && (
+          <div className="relative cursor-pointer" onClick={() => navigate("/notifications")}>
 
-          {/* ⭐ Tooltip (shows for 2 seconds) */}
-          {showTooltip && (
-            <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs py-1.5 px-3 whitespace-nowrap rounded-full shadow-lg opacity-90 animate-fadeInOut">
+            {/* ⭐ Tooltip (shows for 2 seconds) */}
+            {showTooltip && (
+              <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs py-1.5 px-3 whitespace-nowrap rounded-full shadow-lg opacity-90 animate-fadeInOut">
 
-              {/* 🔺 Rounded Triangle Pointer */}
-              <div className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-0 h-0 
-      border-l-8 border-l-transparent 
-      border-r-8 border-r-transparent 
-      border-b-8 border-b-red-600 rounded-sm">
+                {/* 🔺 Rounded Triangle Pointer */}
+                <div className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-0 h-0 
+        border-l-8 border-l-transparent 
+        border-r-8 border-r-transparent 
+        border-b-8 border-b-red-600 rounded-sm">
+                </div>
+
+                New Notifications
               </div>
+            )}
 
-              New Notifications
+
+            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+              <Bell size={18} />
             </div>
-          )}
 
-
-          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow">
+                {unreadCount}
+              </span>
+            )}
           </div>
-
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow">
-              {unreadCount}
-            </span>
-          )}
-        </div>
+        )}
 
 
 
