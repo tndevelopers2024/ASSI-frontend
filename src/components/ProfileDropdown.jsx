@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 export default function ProfileDropdown({ onLogout, onEditImage, user }) {
   const navigate = useNavigate();
   return (
-    <div className="absolute right-0 mt-3 w-64 rounded-2xl shadow-xl overflow-hidden z-50 animate-fadeIn">
+    <div className="absolute right-0 mt-3 min-w-64 rounded-2xl shadow-xl overflow-hidden z-50 animate-fadeIn">
 
       {/* BLUE TOP SECTION WITH AVATAR */}
       <div className="bg-blue-600 p-5 flex flex-col items-center">
