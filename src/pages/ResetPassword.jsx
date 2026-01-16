@@ -64,7 +64,7 @@ export default function ResetPassword() {
                     <img
                         src={logo}
                         alt="ASSI"
-                        className="w-32 drop-shadow-lg animate-float"
+                        className="w-60"
                     />
                 </div>
 
