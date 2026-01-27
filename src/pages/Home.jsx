@@ -17,7 +17,7 @@ export default function Home() {
 
     // Selected categories
     const [selectedCategories, setSelectedCategories] = useState([]);
-    const [sortBy, setSortBy] = useState("random");
+    const [sortBy, setSortBy] = useState("recent");
     const { searchQuery } = useSearch();
 
     // Pagination State
