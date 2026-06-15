@@ -134,45 +134,41 @@ export default function Topbar() {
       {/* Right Side */}
       <div className="flex items-center gap-5">
 
-        {user?.membership_category !== "LIFE" && (
-          <button
-            onClick={() => openUploadModal()}
-            className="bg-blue-600 text-white px-5 py-2 rounded-full hidden md:flex text-sm hover:bg-blue-700 cursor-pointer items-center gap-2"
-          >
-            <p>Add Your Case</p> <Plus size={16} />
-          </button>
-        )}
+        <button
+          onClick={() => openUploadModal()}
+          className="bg-blue-600 text-white px-5 py-2 rounded-full hidden md:flex text-sm hover:bg-blue-700 cursor-pointer items-center gap-2"
+        >
+          <p>Add Your Case</p> <Plus size={16} />
+        </button>
 
-        {user?.membership_category !== "LIFE" && (
-          <div className="relative cursor-pointer" onClick={() => navigate("/notifications")}>
+        <div className="relative cursor-pointer" onClick={() => navigate("/notifications")}>
 
-            {/* ⭐ Tooltip (shows for 2 seconds) */}
-            {showTooltip && (
-              <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs py-1.5 px-3 whitespace-nowrap rounded-full shadow-lg opacity-90 animate-fadeInOut">
+          {/* ⭐ Tooltip (shows for 2 seconds) */}
+          {showTooltip && (
+            <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs py-1.5 px-3 whitespace-nowrap rounded-full shadow-lg opacity-90 animate-fadeInOut">
 
-                {/* 🔺 Rounded Triangle Pointer */}
-                <div className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-0 h-0 
-        border-l-8 border-l-transparent 
-        border-r-8 border-r-transparent 
-        border-b-8 border-b-red-600 rounded-sm">
-                </div>
-
-                New Notifications
+              {/* 🔺 Rounded Triangle Pointer */}
+              <div className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-0 h-0 
+      border-l-8 border-l-transparent 
+      border-r-8 border-r-transparent 
+      border-b-8 border-b-red-600 rounded-sm">
               </div>
-            )}
 
-
-            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-              <Bell size={18} />
+              New Notifications
             </div>
+          )}
 
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow">
-                {unreadCount}
-              </span>
-            )}
+
+          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+            <Bell size={18} />
           </div>
-        )}
+
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow">
+              {unreadCount}
+            </span>
+          )}
+        </div>
 
 
 

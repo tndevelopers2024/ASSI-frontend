@@ -286,54 +286,48 @@ export default function CommentModal({
 
 
                 {/* Comment Input Box */}
-                {currentUser.membership_category !== "LIFE" ? (
-                    <div className="mt-5 rounded-xl p-3 bg-gray-50">
+                <div className="mt-5 rounded-xl p-3 bg-gray-50">
 
-                        <textarea
-                            placeholder="Write a Comment..."
-                            rows={2}
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            className="w-full p-3 rounded-lg outline-none resize-none"
-                        ></textarea>
+                    <textarea
+                        placeholder="Write a Comment..."
+                        rows={2}
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        className="w-full p-3 rounded-lg outline-none resize-none"
+                    ></textarea>
 
-                        {errorMessage && (
-                            <p className="text-red-500 mt-2 text-sm">{errorMessage}</p>
-                        )}
+                    {errorMessage && (
+                        <p className="text-red-500 mt-2 text-sm">{errorMessage}</p>
+                    )}
 
-                        <div className="flex items-center justify-between mt-3">
+                    <div className="flex items-center justify-between mt-3">
 
-                            {/* Upload Button */}
-                            <label className="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-black">
-                                <Upload size={18} />
-                                <span className="max-md:text-xs">Upload Documents</span>
-                                <input
-                                    type="file"
-                                    multiple
-                                    accept="image/*,.pdf,.doc,.docx"
-                                    onChange={handleUpload}
-                                    className="hidden"
-                                />
-                            </label>
+                        {/* Upload Button */}
+                        <label className="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-black">
+                            <Upload size={18} />
+                            <span className="max-md:text-xs">Upload Documents</span>
+                            <input
+                                type="file"
+                                multiple
+                                accept="image/*,.pdf,.doc,.docx"
+                                onChange={handleUpload}
+                                className="hidden"
+                            />
+                        </label>
 
-                            {/* Post Button */}
-                            <button
-                                onClick={handlePostComment}
-                                disabled={isPosting}
-                                className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-full cursor-pointer max-md:px-3 max-md:py-1 max-md:text-xs whitespace-nowrap ${isPosting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
-                            >
-                                {isPosting ? "Posting..." : "Post Comment"}
-                                <SendHorizontal />
-                            </button>
+                        {/* Post Button */}
+                        <button
+                            onClick={handlePostComment}
+                            disabled={isPosting}
+                            className={`flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-full cursor-pointer max-md:px-3 max-md:py-1 max-md:text-xs whitespace-nowrap ${isPosting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
+                        >
+                            {isPosting ? "Posting..." : "Post Comment"}
+                            <SendHorizontal />
+                        </button>
 
 
-                        </div>
                     </div>
-                ) : (
-                    <div className="mt-5 p-4 bg-gray-50 rounded-xl text-center text-gray-500 italic text-sm">
-                        LIFE members can only view and like posts.
-                    </div>
-                )}
+                </div>
 
                 {/* Comments List */}
                 <div className="mt-6">

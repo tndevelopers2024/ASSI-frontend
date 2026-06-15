@@ -433,19 +433,13 @@ export default function CaseCard({ data, onDelete, onUpdate, onLike, highlightCo
                     </div>
 
                     <div className="flex-1">
-                        {currentUser.membership_category !== "LIFE" ? (
-                            <InlineCommentBox
-                                postId={data._id}
-                                onCommentAdded={async () => {
-                                    const fetchedComments = await getComments(data._id);
-                                    setComments(fetchedComments);
-                                }}
-                            />
-                        ) : (
-                            <div className="bg-gray-50 p-3 rounded-xl text-sm text-gray-500 italic">
-                                LIFE members can only view and like posts.
-                            </div>
-                        )}
+                        <InlineCommentBox
+                            postId={data._id}
+                            onCommentAdded={async () => {
+                                const fetchedComments = await getComments(data._id);
+                                setComments(fetchedComments);
+                            }}
+                        />
                     </div>
 
                     <button
