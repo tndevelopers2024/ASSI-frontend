@@ -97,7 +97,9 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
 
     // Get replies for a specific comment
     const getReplies = (commentId) => {
-        const allReplies = comments.filter(c => c.parentComment?._id === commentId);
+        const allReplies = comments.filter(c => 
+            c.parentComment?._id === commentId || c.parentComment === commentId
+        );
 
         const isExpanded = replyExpandState[commentId];
 
@@ -190,8 +192,8 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
 
         const commentImages = comment.files?.map(file => `${BASE_URL}/${file}`) || [];
 
-        // Allow nested replies up to depth 3
-        const replies = depth < 3 ? getReplies(comment._id) : [];
+        // Allow nested replies up to depth 10
+        const replies = depth < 10 ? getReplies(comment._id) : [];
         const isOwner = currentUser._id === (comment.user?._id || comment.user);
         const userRole = currentUser.role?.toLowerCase();
         const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "super_admin" || userRole === "super admin";
@@ -318,7 +320,7 @@ export default function Comments({ comments = [], postId, highlightCommentId, on
                     </div>
                 )}
                 {/* Show more / less replies button per comment */}
-                {comments.filter(c => c.parentComment?._id === comment._id).length > replies.length || replyExpandState[comment._id] ? (
+                {comments.filter(c => c.parentComment?._id === comment._id || c.parentComment === comment._id).length > replies.length || replyExpandState[comment._id] ? (
                     <button
                         onClick={() => toggleReplies(comment._id)}
                         className="text-xs text-gray-600 hover:text-blue-600 ml-12 cursor-pointer mt-1"
